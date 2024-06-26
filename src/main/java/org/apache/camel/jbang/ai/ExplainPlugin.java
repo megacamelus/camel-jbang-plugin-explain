@@ -9,7 +9,9 @@ import picocli.CommandLine;
 public class ExplainPlugin implements Plugin {
     @Override
     public void customize(CommandLine commandLine, CamelJBangMain main) {
-        var cmd = new picocli.CommandLine(new ExplainCommand(main));
+        var cmd = new picocli.CommandLine(new ExplainCommand(main))
+                .addSubcommand("load", new LoadCommand(main))
+                .addSubcommand("whatis", new WhatIsCommand(main));
 
         commandLine.addSubcommand("explain", cmd);
     }

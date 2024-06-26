@@ -14,6 +14,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <camel.version>4.7.0-SNAPSHOT</camel.version>
         <langchain4j-version>0.31.0</langchain4j-version>
+        <qdrant-version>1.9.1</qdrant-version>
+        <grpc-protobuf-version>1.64.0</grpc-protobuf-version>
     </properties>
 
     <dependencyManagement>
@@ -39,6 +41,19 @@
             <artifactId>langchain4j-open-ai</artifactId>
             <version>${langchain4j-version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-qdrant</artifactId>
+            <version>${langchain4j-version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-embeddings-all-minilm-l6-v2</artifactId>
+            <version>${langchain4j-version}</version>
+        </dependency>
+
     </dependencies>
 
 </project>
