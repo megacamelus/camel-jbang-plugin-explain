@@ -1,7 +1,8 @@
-package org.apache.camel.jbang.ai;
+package org.apache.camel.standalone;
 
 import java.util.concurrent.Callable;
 
+import org.apache.camel.jbang.ai.Loader;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "load",

@@ -1,7 +1,8 @@
-package org.apache.camel.jbang.ai;
+package org.apache.camel.standalone;
 
 import java.util.concurrent.Callable;
 
+import org.apache.camel.jbang.ai.WhatIsServiceClient;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "whatis",
@@ -41,7 +42,8 @@ public class WhatIsMain implements Callable<Integer> {
     private String what;
 
     public Integer call() throws Exception {
-        WhatIsServiceClient serviceClient = new WhatIsServiceClient(url, apiKey, modelName, userPrompt, systemPrompt, what, host, port, collectionName);
+        WhatIsServiceClient
+                serviceClient = new WhatIsServiceClient(url, apiKey, modelName, userPrompt, systemPrompt, what, host, port, collectionName);
 
         return serviceClient.run();
     }

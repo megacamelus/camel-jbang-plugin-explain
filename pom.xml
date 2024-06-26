@@ -16,6 +16,8 @@
         <langchain4j-version>0.31.0</langchain4j-version>
         <qdrant-version>1.9.1</qdrant-version>
         <grpc-protobuf-version>1.64.0</grpc-protobuf-version>
+
+        <main.class>org.apache.camel.standalone.Main</main.class>
     </properties>
 
     <dependencyManagement>
@@ -55,5 +57,54 @@
         </dependency>
 
     </dependencies>
+
+    <profiles>
+        <profile>
+            <id>standalone</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.camel</groupId>
+                        <artifactId>camel-maven-plugin</artifactId>
+                        <version>${camel.version}</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>prepare-fatjar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <configuration>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                            <archive>
+                                <manifest>
+                                    <mainClass>${main.class}</mainClass>
+                                </manifest>
+                            </archive>
+                            <finalName>${project.artifactId}-${camel.version}</finalName>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>make-assembly</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
