@@ -1,14 +1,13 @@
 package org.apache.camel.jbang.ai;
 
-import dev.langchain4j.model.embedding.AllMiniLmL6V2EmbeddingModel;
-import dev.langchain4j.model.embedding.EmbeddingModel;
-import org.apache.camel.dsl.jbang.core.commands.CamelCommand;
-import org.apache.camel.dsl.jbang.core.commands.CamelJBangMain;
+import java.util.concurrent.Callable;
+
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "whatis",
         description = "Explain things using AI")
-public class WhatIsCommand extends CamelCommand {
+public class WhatIsMain implements Callable<Integer> {
+
     @CommandLine.Option(names = {
             "--host" }, description = "The Qdrant host", defaultValue = "localhost", arity = "1..1", required = true)
     private String host;
@@ -41,17 +40,16 @@ public class WhatIsCommand extends CamelCommand {
     @CommandLine.Parameters(paramLabel = "what", description = "What to explain")
     private String what;
 
-
-    public WhatIsCommand(CamelJBangMain main) {
-        super(main);
-    }
-
-    @Override
-    public Integer doCall() throws Exception {
+    public Integer call() throws Exception {
         WhatIsServiceClient serviceClient = new WhatIsServiceClient(url, apiKey, modelName, userPrompt, systemPrompt, what, host, port, collectionName);
 
         return serviceClient.run();
     }
 
-
+    // this example implements Callable, so parsing, error handling and handling user
+    // requests for usage help or version help can be done with one line of code.
+    public static void main(String... args) {
+        int exitCode = new CommandLine(new WhatIsMain()).execute(args);
+        System.exit(exitCode);
+    }
 }
