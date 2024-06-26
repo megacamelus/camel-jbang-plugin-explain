@@ -36,6 +36,14 @@ public class WhatIsServiceClient {
     private final String host;
     private final int port;
     private final String collectionName;
+    private static final PromptTemplate PROMPT_TEMPLATE = PromptTemplate.from(
+            "Answer the following question to the best of your ability:\n"
+                    + "\n"
+                    + "Question:\n"
+                    + "{{question}}\n"
+                    + "\n"
+                    + "Base your answer on the following information:\n"
+                    + "{{information}}");
 
     public WhatIsServiceClient(
             String url, String apiKey, String modelName, String userPrompt, String systemPrompt, String what, String host,
@@ -53,8 +61,9 @@ public class WhatIsServiceClient {
 
     public int run() throws InterruptedException {
         OpenAiStreamingChatModel chatModel = buildModel(modelName);
+
         EmbeddingModel embeddingModel = new AllMiniLmL6V2EmbeddingModel();
-        Embedding questionEmbedding = embeddingModel.embed(userPrompt).content();
+        Embedding questionEmbedding = embeddingModel.embed(what).content();
 
         EmbeddingStore<TextSegment> embeddingStore =
                 QdrantEmbeddingStore.builder()
@@ -63,20 +72,10 @@ public class WhatIsServiceClient {
                         .collectionName(collectionName)
                         .build();
 
-        int maxResults = 3;
+        int maxResults = 4;
         double minScore = 0.7;
         List<EmbeddingMatch<TextSegment>> relevantEmbeddings
                 = embeddingStore.findRelevant(questionEmbedding, maxResults, minScore);
-
-
-        PromptTemplate promptTemplate = PromptTemplate.from(
-                "Answer the following question to the best of your ability:\n"
-                        + "\n"
-                        + "Question:\n"
-                        + "{{question}}\n"
-                        + "\n"
-                        + "Base your answer on the following information:\n"
-                        + "{{information}}");
 
         String information = relevantEmbeddings.stream()
                 .map(match -> match.embedded().text())
@@ -86,7 +85,7 @@ public class WhatIsServiceClient {
         variables.put("question", what);
         variables.put("information", information);
 
-        Prompt prompt = promptTemplate.apply(variables);
+        Prompt prompt = PROMPT_TEMPLATE.apply(variables);
 
         List<ChatMessage> messages;
         if (systemPrompt != null) {

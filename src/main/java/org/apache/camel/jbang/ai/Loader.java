@@ -68,7 +68,7 @@ public final class Loader {
             final List<ComponentModel.ComponentOptionModel> componentOptions = componentModel.getComponentOptions();
 
             for (ComponentModel.ComponentOptionModel optionModel : componentOptions) {
-                final String data = toEmbeddableText(optionModel);
+                final String data = toEmbeddableText(componentName, optionModel);
 
                 TextSegment segment1 = TextSegment.from(data);
                 Embedding embedding1 = embeddingModel.embed(segment1).content();
@@ -78,7 +78,7 @@ public final class Loader {
             final List<ComponentModel.EndpointOptionModel> endpointParameterOptions1 =
                     componentModel.getEndpointParameterOptions();
             for (ComponentModel.EndpointOptionModel endpointParameterModel : endpointParameterOptions1) {
-                final String data = toEmbeddableText(endpointParameterModel);
+                final String data = toEmbeddableText(componentName, endpointParameterModel);
 
                 TextSegment segment1 = TextSegment.from(data);
                 Embedding embedding1 = embeddingModel.embed(segment1).content();
@@ -88,12 +88,13 @@ public final class Loader {
         return 0;
     }
 
-    private static String toEmbeddableText(BaseOptionModel optionModel) {
+    private static String toEmbeddableText(String componentName, BaseOptionModel optionModel) {
         SimpleRequestBuilder request = new SimpleRequestBuilder();
 
-        request.append("name", optionModel.getName())
-                .append("displayName", optionModel.getDisplayName())
+        request.append("component", componentName)
+                .append("option", optionModel.getName())
                 .append("description", optionModel.getDescription())
+                .append("defaultValue", optionModel.getDefaultValue())
                 .append("type", optionModel.getType())
                 .append("required", optionModel.isRequired())
                 .append("groups", optionModel.getGroup());
