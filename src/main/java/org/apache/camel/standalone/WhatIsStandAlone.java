@@ -7,7 +7,7 @@ import picocli.CommandLine;
 
 @CommandLine.Command(name = "whatis",
         description = "Explain things using AI")
-public class WhatIsMain implements Callable<Integer> {
+public class WhatIsStandAlone implements Callable<Integer> {
 
     @CommandLine.Option(names = {
             "--host" }, description = "The Qdrant host", defaultValue = "localhost", arity = "1..1", required = true)

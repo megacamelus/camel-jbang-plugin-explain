@@ -7,7 +7,7 @@ import picocli.CommandLine;
 
 @CommandLine.Command(name = "load",
         description = "Load data into a vector DB")
-public class LoadMain implements Callable<Integer> {
+public class LoadStandAlone implements Callable<Integer> {
 
     @CommandLine.Option(names = {
             "--host" }, description = "The Qdrant host", defaultValue = "localhost", arity = "1..1", required = true)
@@ -35,7 +35,7 @@ public class LoadMain implements Callable<Integer> {
     // this example implements Callable, so parsing, error handling and handling user
     // requests for usage help or version help can be done with one line of code.
     public static void main(String... args) {
-        int exitCode = new CommandLine(new LoadMain()).execute(args);
+        int exitCode = new CommandLine(new LoadStandAlone()).execute(args);
         System.exit(exitCode);
     }
 }
