@@ -1,5 +1,6 @@
 package org.apache.camel.jbang.ai;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -19,14 +20,14 @@ import static org.apache.camel.jbang.ai.util.ModelUtil.buildModel;
 import static org.apache.camel.jbang.ai.util.RagUtil.findRelevant;
 import static org.apache.camel.jbang.ai.util.RagUtil.toPrompt;
 
-public class WhatIsServiceClient {
+public class GenerateServiceClient {
     private static final PromptTemplate PROMPT_TEMPLATE = PromptTemplate.from(
-            "Answer the following question to the best of your ability:\n"
+            "Please generate this code to the best of your ability:\n"
                     + "\n"
-                    + "Question:\n"
+                    + "Description:\n"
                     + "{{question}}\n"
                     + "\n"
-                    + "Base your answer on the following information:\n"
+                    + "Consider the following additional information:\n"
                     + "{{information}}");
 
     private final String url;
@@ -39,7 +40,7 @@ public class WhatIsServiceClient {
     private final String collectionName;
 
 
-    public WhatIsServiceClient(
+    public GenerateServiceClient(
             String url, String apiKey, String modelName, String systemPrompt, String what, String host,
             int port, String collectionName) {
         this.url = url;

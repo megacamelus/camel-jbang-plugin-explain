@@ -17,15 +17,6 @@ import dev.langchain4j.store.embedding.qdrant.QdrantEmbeddingStore;
 import static java.util.stream.Collectors.joining;
 
 public final class RagUtil {
-    private static final PromptTemplate PROMPT_TEMPLATE = PromptTemplate.from(
-            "Answer the following question to the best of your ability:\n"
-                    + "\n"
-                    + "Question:\n"
-                    + "{{question}}\n"
-                    + "\n"
-                    + "Base your answer on the following information:\n"
-                    + "{{information}}");
-
     public static List<EmbeddingMatch<TextSegment>> findRelevant(String host, int port, String collectionName, String searchTerm) {
         EmbeddingModel embeddingModel = new AllMiniLmL6V2EmbeddingModel();
         Embedding questionEmbedding = embeddingModel.embed(searchTerm).content();
@@ -44,7 +35,7 @@ public final class RagUtil {
         return relevantEmbeddings;
     }
 
-    public static Prompt toPrompt(List<EmbeddingMatch<TextSegment>> relevantEmbeddings, String question) {
+    public static Prompt toPrompt(PromptTemplate promptTemplate, List<EmbeddingMatch<TextSegment>> relevantEmbeddings, String question) {
         String information = relevantEmbeddings.stream()
                 .map(match -> match.embedded().text())
                 .collect(joining("\n\n"));
@@ -53,7 +44,6 @@ public final class RagUtil {
         variables.put("question", question);
         variables.put("information", information);
 
-        Prompt prompt = PROMPT_TEMPLATE.apply(variables);
-        return prompt;
+        return promptTemplate.apply(variables);
     }
 }
