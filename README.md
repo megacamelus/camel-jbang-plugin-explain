@@ -6,6 +6,14 @@ Download and install [Ollama](https://ollama.com/)
 
 # Start Ollama 
 
+1. Pull the Granite 8b Code model: 
+
+```shell
+ollama pull granite-code:8b
+```
+
+2. Launch the server: 
+3. 
 ```shell
 OLLAMA_FLASH_ATTENTION=1 OLLAMA_HOST=localhost:8000 ollama serve
 ```
