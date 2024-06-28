@@ -43,7 +43,7 @@ public class WhatIsMain implements Callable<Integer> {
 
     public Integer call() throws Exception {
         WhatIsServiceClient
-                serviceClient = new WhatIsServiceClient(url, apiKey, modelName, userPrompt, systemPrompt, what, host, port, collectionName);
+                serviceClient = new WhatIsServiceClient(url, apiKey, modelName, systemPrompt, what, host, port, collectionName);
 
         return serviceClient.run();
     }

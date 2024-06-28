@@ -1,7 +1,5 @@
 package org.apache.camel.jbang.ai;
 
-import dev.langchain4j.model.embedding.AllMiniLmL6V2EmbeddingModel;
-import dev.langchain4j.model.embedding.EmbeddingModel;
 import org.apache.camel.dsl.jbang.core.commands.CamelCommand;
 import org.apache.camel.dsl.jbang.core.commands.CamelJBangMain;
 import picocli.CommandLine;
@@ -30,15 +28,11 @@ public class WhatIsCommand extends CamelCommand {
     @CommandLine.Option(names = {"--model-name"}, description = "The model name to use", arity = "0..1", required = true)
     private String modelName;
 
-    @CommandLine.Option(names = {"--user-prompt"}, description = "The user prompt for the activity", arity = "0..1",
-            defaultValue = "Please explain this", required = true)
-    private String userPrompt;
-
     @CommandLine.Option(names = {"--system-prompt"}, description = "An optional system prompt to use",
             defaultValue = "You are a coding assistant specialized in Apache Camel", arity = "0..1")
     private String systemPrompt;
 
-    @CommandLine.Parameters(paramLabel = "what", description = "What to explain")
+    @CommandLine.Parameters(paramLabel = "what", description = "What to explain (also known as 'user prompt')")
     private String what;
 
 
@@ -48,7 +42,7 @@ public class WhatIsCommand extends CamelCommand {
 
     @Override
     public Integer doCall() throws Exception {
-        WhatIsServiceClient serviceClient = new WhatIsServiceClient(url, apiKey, modelName, userPrompt, systemPrompt, what, host, port, collectionName);
+        WhatIsServiceClient serviceClient = new WhatIsServiceClient(url, apiKey, modelName, systemPrompt, what, host, port, collectionName);
 
         return serviceClient.run();
     }
