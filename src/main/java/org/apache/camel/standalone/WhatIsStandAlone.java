@@ -51,7 +51,7 @@ public class WhatIsStandAlone implements Callable<Integer> {
     // this example implements Callable, so parsing, error handling and handling user
     // requests for usage help or version help can be done with one line of code.
     public static void main(String... args) {
-        int exitCode = new CommandLine(new WhatIsMain()).execute(args);
+        int exitCode = new CommandLine(new WhatIsStandAlone()).execute(args);
         System.exit(exitCode);
     }
 }
