@@ -19,6 +19,7 @@ public class Main implements Callable<Integer> {
                 .addSubcommand("load", new LoadStandAlone())
                 .addSubcommand("whatis", new WhatIsStandAlone())
                 .addSubcommand("generate", new GenerateStandalone())
+                .addSubcommand("data", new DataStandalone())
                 .execute(args);
 
         System.exit(exitCode);
