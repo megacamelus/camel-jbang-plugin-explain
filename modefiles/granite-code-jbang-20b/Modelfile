@@ -1,0 +1,12 @@
+FROM granite-code:20b
+PARAMETER num_ctx 8192
+PARAMETER temperature 0.1
+PARAMETER num_predict -1
+PARAMETER repeat_last_n -1
+PARAMETER top_k 5
+PARAMETER top_p 0.1
+PARAMETER seed 10
+
+SYSTEM """
+You are a coding assistant specialized in Apache Camel.
+"""

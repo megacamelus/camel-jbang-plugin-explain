@@ -13,10 +13,28 @@ ollama pull granite-code:8b
 ```
 
 2. Launch the server: 
-3. 
+
 ```shell
 OLLAMA_FLASH_ATTENTION=1 OLLAMA_HOST=localhost:8000 ollama serve
 ```
+
+You can also use customized models that are configured to be more conservative. 
+
+If you have enough memory (32Gb or more) you can try the 20b one:
+
+```shell
+cd modefiles/granite-code-jbang-20b
+ollama create granite-code-jbang:20b -f ./Modelfile
+```
+
+Otherwise, you can try the 8b one: 
+
+```shell
+cd modefiles/granite-code-jbang-8b
+ollama create granite-code-jbang:8b -f ./Modelfile
+```
+
+Then, when using the application, pass the appropriate model name (i.e.; `--model-name=granite-code-jbang:20b`).
 
 # Running as Camel JBang Plugin
 
