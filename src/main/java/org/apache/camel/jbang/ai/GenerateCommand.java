@@ -35,10 +35,6 @@ public class GenerateCommand extends CamelCommand {
     @CommandLine.Parameters(paramLabel = "description", description = "Please explain what the code has to do (also known as 'user prompt')")
     private String description;
 
-    @CommandLine.Parameters(paramLabel = "description", description = "Please explain what the code has to do (also known as 'user prompt')", arity = "1..*")
-    private String[] routeRequirements;
-
-
     public GenerateCommand(CamelJBangMain main) {
         super(main);
     }
