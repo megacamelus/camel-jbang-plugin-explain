@@ -17,7 +17,7 @@ public class Main implements Callable<Integer> {
     public static void main(String... args) {
         int exitCode = new CommandLine(new Main())
                 .addSubcommand("load", new LoadStandAlone())
-                .addSubcommand("whatis", new WhatIsMain())
+                .addSubcommand("whatis", new WhatIsStandAlone())
                 .addSubcommand("generate", new GenerateStandalone())
                 .execute(args);
 
