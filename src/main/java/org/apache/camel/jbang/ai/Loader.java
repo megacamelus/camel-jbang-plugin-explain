@@ -68,24 +68,36 @@ public final class Loader {
             final List<ComponentModel.ComponentOptionModel> componentOptions = componentModel.getComponentOptions();
 
             for (ComponentModel.ComponentOptionModel optionModel : componentOptions) {
-                final String data = toEmbeddableText(componentName, optionModel);
-
-                TextSegment segment1 = TextSegment.from(data);
-                Embedding embedding1 = embeddingModel.embed(segment1).content();
-                embeddingStore.add(embedding1, segment1);
+                loadComponentOption(componentName, optionModel, embeddingModel, embeddingStore);
             }
 
             final List<ComponentModel.EndpointOptionModel> endpointParameterOptions1 =
                     componentModel.getEndpointParameterOptions();
             for (ComponentModel.EndpointOptionModel endpointParameterModel : endpointParameterOptions1) {
-                final String data = toEmbeddableText(componentName, endpointParameterModel);
-
-                TextSegment segment1 = TextSegment.from(data);
-                Embedding embedding1 = embeddingModel.embed(segment1).content();
-                embeddingStore.add(embedding1, segment1);
+                loadEndpointOption(componentName, endpointParameterModel, embeddingModel, embeddingStore);
             }
         }
         return 0;
+    }
+
+    private static void loadEndpointOption(
+            String componentName, ComponentModel.EndpointOptionModel endpointParameterModel, EmbeddingModel embeddingModel,
+            EmbeddingStore<TextSegment> embeddingStore) {
+        final String data = toEmbeddableText(componentName, endpointParameterModel);
+
+        TextSegment segment1 = TextSegment.from(data);
+        Embedding embedding1 = embeddingModel.embed(segment1).content();
+        embeddingStore.add(embedding1, segment1);
+    }
+
+    private static void loadComponentOption(
+            String componentName, ComponentModel.ComponentOptionModel optionModel, EmbeddingModel embeddingModel,
+            EmbeddingStore<TextSegment> embeddingStore) {
+        final String data = toEmbeddableText(componentName, optionModel);
+
+        TextSegment segment1 = TextSegment.from(data);
+        Embedding embedding1 = embeddingModel.embed(segment1).content();
+        embeddingStore.add(embedding1, segment1);
     }
 
     private static String toEmbeddableText(String componentName, BaseOptionModel optionModel) {
