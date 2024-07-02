@@ -153,7 +153,7 @@ public class DataServiceClient {
 
         chatModel.generate(questionMessage, responseHandler);
 
-        if (!latch.await(45, TimeUnit.SECONDS)) {
+        if (!latch.await(2, TimeUnit.MINUTES)) {
             System.err.println("No response was generated for component " + componentName + ". Skipping");
             return null;
         }
@@ -172,7 +172,7 @@ public class DataServiceClient {
 
         chatModel.generate(responseMessage, responseHandler);
 
-        if (!latch.await(45, TimeUnit.SECONDS)) {
+        if (!latch.await(2, TimeUnit.MINUTES)) {
             System.err.println("No response was generated for component " + componentName + ". Skipping");
             return null;
         }
