@@ -36,7 +36,6 @@ public class DataServiceClient {
     private final String apiKey;
     private final String modelName;
 
-
     public DataServiceClient(String url, String apiKey, String modelName) {
         this.url = url;
         this.apiKey = apiKey;
@@ -54,19 +53,22 @@ public class DataServiceClient {
     private void createSyntheticQuestions(OpenAiStreamingChatModel chatModel) throws InterruptedException {
         CamelCatalog catalog = new DefaultCamelCatalog(true);
 
-        final List<AlpacaRecord> alpacaRecords = new ArrayList<>(1024);
-        processCatalog(chatModel, catalog, alpacaRecords);
+        processCatalog(chatModel, catalog);
 
-        saveRecords(alpacaRecords);
     }
 
-    private static void processCatalog(OpenAiStreamingChatModel chatModel, CamelCatalog catalog, List<AlpacaRecord> alpacaRecords)
+    private static void processCatalog(OpenAiStreamingChatModel chatModel, CamelCatalog catalog)
             throws InterruptedException {
 
         final List<String> componentNames = catalog.findComponentNames();
         int i = 0;
         final int totalComponents = componentNames.size();
         for (String componentName : componentNames) {
+            if (!componentName.equalsIgnoreCase("as2")) {
+                continue;
+            }
+
+            final List<AlpacaRecord> alpacaRecords = new ArrayList<>(1024);
             System.out.printf("Processing component %d of %d: %s%n", i, totalComponents, componentName);
 
             final ComponentModel componentModel = catalog.componentModel(componentName);
@@ -77,6 +79,9 @@ public class DataServiceClient {
             final List<ComponentModel.EndpointOptionModel> endpointParameterOptions =
                     componentModel.getEndpointParameterOptions();
             processComponentOption(chatModel, alpacaRecords, componentName, endpointParameterOptions, "endpoint");
+
+            saveRecords(alpacaRecords, componentName);
+
             i++;
         }
     }
@@ -94,12 +99,15 @@ public class DataServiceClient {
         }
     }
 
-    private static void saveRecords(List<AlpacaRecord> alpacaRecords) {
+    private static void saveRecords(List<AlpacaRecord> alpacaRecords, String componentName) {
         if (!alpacaRecords.isEmpty()) {
             ObjectMapper mapper = new ObjectMapper();
 
+            final File file = new File("dataset", String.format("camel-%s.json", componentName));
+            file.getParentFile().mkdirs();
+
             try {
-                mapper.writeValue(new File("camel.json"), alpacaRecords);
+                mapper.writeValue(file, alpacaRecords);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -117,18 +125,18 @@ public class DataServiceClient {
         if (questionResponse == null) {
             return;
         }
-        System.out.println("Generated question: " + questionResponse);
+
+//        System.out.println("Generated question: " + questionResponse);
 
         final String responseResponse = generateResponse(chatModel, componentName, questionMeta.information, questionResponse);
         if (responseResponse == null) {
             return;
         }
-        System.out.println("Generated response: " + responseResponse);
+//        System.out.println("Generated response: " + responseResponse);
 
         alpacaRecord.setInstruction(questionResponse);
         alpacaRecord.setInput("");
         alpacaRecord.setOutput(responseResponse);
-
 
         alpacaRecords.add(alpacaRecord);
     }
@@ -220,7 +228,7 @@ public class DataServiceClient {
 
         @Override
         public void onNext(String s) {
-            System.out.print(s);
+//            System.out.print(s);
             responseBuffer.append(s);
         }
 
@@ -232,7 +240,7 @@ public class DataServiceClient {
         @Override
         public void onComplete(Response<AiMessage> response) {
             try {
-                System.out.printf("%n");
+//                System.out.printf("%n");
                 StreamingResponseHandler.super.onComplete(response);
             } finally {
                 latch.countDown();
