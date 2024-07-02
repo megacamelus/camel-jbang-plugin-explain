@@ -2,6 +2,7 @@ package org.apache.camel.jbang.ai;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +23,7 @@ import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.jbang.ai.types.AlpacaRecord;
 import org.apache.camel.tooling.model.BaseOptionModel;
 import org.apache.camel.tooling.model.ComponentModel;
+import org.apache.camel.util.StopWatch;
 
 import static org.apache.camel.jbang.ai.util.ModelUtil.buildModel;
 
@@ -92,10 +94,14 @@ public class DataServiceClient {
         int componentOptionCount = 0;
         final int componentOptionTotal = optionModels.size();
         for (BaseOptionModel optionModel : optionModels) {
-            System.out.printf("Processing %s option %d of %d: %s -> %s%n", type, componentOptionCount, componentOptionTotal,
+            StopWatch watch = new StopWatch();
+            System.out.printf("Processing %s option %d of %d: %s -> %s", type, componentOptionCount, componentOptionTotal,
                     componentName, optionModel.getName());
             createRecord(chatModel, componentName, optionModel, alpacaRecords);
             componentOptionCount++;
+            final long taken = watch.taken();
+            System.out.printf(" [took %d s]%n", Duration.ofMillis(taken).toSeconds());
+
         }
     }
 
