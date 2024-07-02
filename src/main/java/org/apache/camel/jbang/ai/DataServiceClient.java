@@ -64,21 +64,33 @@ public class DataServiceClient {
             throws InterruptedException {
 
         final List<String> componentNames = catalog.findComponentNames();
+        int i = 0;
+        final int totalComponents = componentNames.size();
         for (String componentName : componentNames) {
-            System.out.println("Processing: " + componentName);
+            System.out.printf("Processing component %d of %d: %s%n", i, totalComponents, componentName);
 
             final ComponentModel componentModel = catalog.componentModel(componentName);
+
             final List<ComponentModel.ComponentOptionModel> componentOptions = componentModel.getComponentOptions();
+            processComponentOption(chatModel, alpacaRecords, componentName, componentOptions, "component");
 
-            for (ComponentModel.ComponentOptionModel optionModel : componentOptions) {
-                createRecord(chatModel, componentName, optionModel, alpacaRecords);
-            }
-
-            final List<ComponentModel.EndpointOptionModel> endpointParameterOptions1 =
+            final List<ComponentModel.EndpointOptionModel> endpointParameterOptions =
                     componentModel.getEndpointParameterOptions();
-            for (ComponentModel.EndpointOptionModel optionModel : endpointParameterOptions1) {
-                createRecord(chatModel, componentName, optionModel, alpacaRecords);
-            }
+            processComponentOption(chatModel, alpacaRecords, componentName, endpointParameterOptions, "endpoint");
+            i++;
+        }
+    }
+
+    private static void processComponentOption(
+            OpenAiStreamingChatModel chatModel, List<AlpacaRecord> alpacaRecords, String componentName,
+            List<? extends BaseOptionModel> optionModels, String type) throws InterruptedException {
+        int componentOptionCount = 0;
+        final int componentOptionTotal = optionModels.size();
+        for (BaseOptionModel optionModel : optionModels) {
+            System.out.printf("Processing %s option %d of %d: %s -> %s%n", type, componentOptionCount, componentOptionTotal,
+                    componentName, optionModel.getName());
+            createRecord(chatModel, componentName, optionModel, alpacaRecords);
+            componentOptionCount++;
         }
     }
 
@@ -97,7 +109,6 @@ public class DataServiceClient {
     private static void createRecord(
             OpenAiStreamingChatModel chatModel, String componentName, BaseOptionModel optionModel,
             List<AlpacaRecord> alpacaRecords) throws InterruptedException {
-
 
         AlpacaRecord alpacaRecord = new AlpacaRecord();
 
