@@ -66,10 +66,6 @@ public class DataServiceClient {
         int i = 0;
         final int totalComponents = componentNames.size();
         for (String componentName : componentNames) {
-            if (!componentName.equalsIgnoreCase("as2")) {
-                continue;
-            }
-
             final List<AlpacaRecord> alpacaRecords = new ArrayList<>(1024);
             System.out.printf("Processing component %d of %d: %s%n", i, totalComponents, componentName);
 
