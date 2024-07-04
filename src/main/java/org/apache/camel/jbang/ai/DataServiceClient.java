@@ -87,8 +87,6 @@ public class DataServiceClient {
             processComponentOption(chatModel, alpacaRecords, componentName, endpointParameterOptions, "endpoint");
 
             saveRecords(alpacaRecords, componentName);
-
-            i++;
         }
     }
 
