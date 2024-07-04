@@ -3,6 +3,9 @@ package org.apache.camel.jbang.ai;
 import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -33,6 +36,7 @@ public class DataServiceClient {
 
     private static final PromptTemplate ANSWER_GENERATOR_PROMPT_TEMPLATE = PromptTemplate.from(
             "Please write a paragraph explaining the following information: \"{{information}}\" as if replying to the following question: {{question}}. Only generate the response and nothing else.");
+    private static final String PATTERN_FORMAT = "HH:mm:ss";
 
     private final String url;
     private final String apiKey;
@@ -66,11 +70,12 @@ public class DataServiceClient {
 
         final List<String> componentNames = catalog.findComponentNames();
         final int totalComponents = componentNames.size();
+
         for (int i = startFrom; i < componentNames.size(); i++) {
             final String componentName = componentNames.get(i);
 
             final List<AlpacaRecord> alpacaRecords = new ArrayList<>(1024);
-            System.out.printf("Processing component %d of %d: %s%n", i, totalComponents, componentName);
+            System.out.printf("[%s] Processing component %d of %d: %s%n", currentTime(), i, totalComponents, componentName);
 
             final ComponentModel componentModel = catalog.componentModel(componentName);
 
@@ -94,7 +99,7 @@ public class DataServiceClient {
         final int componentOptionTotal = optionModels.size();
         for (BaseOptionModel optionModel : optionModels) {
             StopWatch watch = new StopWatch();
-            System.out.printf("Processing %s option %d of %d: %s -> %s", type, componentOptionCount, componentOptionTotal,
+            System.out.printf("[%s] Processing %s option %d of %d: %s -> %s", currentTime(), type, componentOptionCount, componentOptionTotal,
                     componentName, optionModel.getName());
             createRecord(chatModel, componentName, optionModel, alpacaRecords);
             componentOptionCount++;
@@ -255,5 +260,12 @@ public class DataServiceClient {
         public String getResponse() {
             return responseBuffer.toString();
         }
+    }
+
+    private static String currentTime() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(PATTERN_FORMAT)
+                .withZone(ZoneId.systemDefault());
+
+        return formatter.format(Instant.now());
     }
 }
