@@ -20,13 +20,17 @@ public class DataCommand extends CamelCommand {
     @CommandLine.Option(names = {"--model-name"}, description = "The model name to use", arity = "0..1", required = true)
     private String modelName;
 
+    @CommandLine.Option(names = {"--start-from"}, description = "Start again from the given index",
+            arity = "0..1", defaultValue = "0", required = true)
+    private int startFrom;
+
     public DataCommand(CamelJBangMain main) {
         super(main);
     }
 
     @Override
     public Integer doCall() throws Exception {
-        DataServiceClient serviceClient = new DataServiceClient(url, apiKey, modelName);
+        DataServiceClient serviceClient = new DataServiceClient(url, apiKey, modelName, startFrom);
 
         return serviceClient.run();
     }

@@ -37,11 +37,13 @@ public class DataServiceClient {
     private final String url;
     private final String apiKey;
     private final String modelName;
+    private final int startFrom;
 
-    public DataServiceClient(String url, String apiKey, String modelName) {
+    public DataServiceClient(String url, String apiKey, String modelName, int startFrom) {
         this.url = url;
         this.apiKey = apiKey;
         this.modelName = modelName;
+        this.startFrom = startFrom;
     }
 
     public int run() throws InterruptedException {
@@ -55,17 +57,18 @@ public class DataServiceClient {
     private void createSyntheticQuestions(OpenAiStreamingChatModel chatModel) throws InterruptedException {
         CamelCatalog catalog = new DefaultCamelCatalog(true);
 
-        processCatalog(chatModel, catalog);
+        processCatalog(chatModel, catalog, startFrom);
 
     }
 
-    private static void processCatalog(OpenAiStreamingChatModel chatModel, CamelCatalog catalog)
+    private static void processCatalog(OpenAiStreamingChatModel chatModel, CamelCatalog catalog, int startFrom)
             throws InterruptedException {
 
         final List<String> componentNames = catalog.findComponentNames();
-        int i = 0;
         final int totalComponents = componentNames.size();
-        for (String componentName : componentNames) {
+        for (int i = startFrom; i < componentNames.size(); i++) {
+            final String componentName = componentNames.get(i);
+
             final List<AlpacaRecord> alpacaRecords = new ArrayList<>(1024);
             System.out.printf("Processing component %d of %d: %s%n", i, totalComponents, componentName);
 

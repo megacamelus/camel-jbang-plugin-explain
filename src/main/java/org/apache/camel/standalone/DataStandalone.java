@@ -5,6 +5,7 @@ import java.util.concurrent.Callable;
 import org.apache.camel.jbang.ai.DataServiceClient;
 import picocli.CommandLine;
 
+@SuppressWarnings("unused")
 @CommandLine.Command(name = "data",
         description = "Generate training data data for Apache Camel")
 public class DataStandalone implements Callable<Integer> {
@@ -21,9 +22,13 @@ public class DataStandalone implements Callable<Integer> {
     @CommandLine.Option(names = {"--model-name"}, description = "The model name to use", arity = "0..1", required = true)
     private String modelName;
 
+    @CommandLine.Option(names = {"--start-from"}, description = "Start again from the given index",
+            arity = "0..1", defaultValue = "0", required = true)
+    private int startFrom;
+
     @Override
     public Integer call() throws Exception {
-        DataServiceClient serviceClient = new DataServiceClient(url, apiKey, modelName);
+        DataServiceClient serviceClient = new DataServiceClient(url, apiKey, modelName, startFrom);
 
         return serviceClient.run();
     }
