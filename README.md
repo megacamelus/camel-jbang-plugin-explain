@@ -91,6 +91,16 @@ java -jar target/camel-jbang-plugin-explain-4.7.0-SNAPSHOT-jar-with-dependencies
 java -jar target/camel-jbang-plugin-explain-4.7.0-SNAPSHOT-jar-with-dependencies.jar whatis --model-name=granite-code:8b --system-prompt="You are a coding assistant specialized in Apache Camel" "Is the client ID required for JMS 2.0 for the JMS component?"
 ```
 
+
+4. Generate a dataset from the catalog information
+
+```shell
+java -jar target/camel-jbang-plugin-explain-4.7.0-SNAPSHOT-jar-with-dependencies.jar data --model-name mistral:latest
+```
+
+NOTE: A GPU is needed for this, otherwise it takes a very long time to generate the dataset (several days instead of about a day)
+
+
 4. Stop the DB
 
 ```shell
