@@ -20,6 +20,9 @@ public class DataCommand extends CamelCommand {
     @CommandLine.Option(names = {"--model-name"}, description = "The model name to use", arity = "0..1", required = true)
     private String modelName;
 
+    @CommandLine.Option(names = {"--data-type"}, description = "The what data type to dump [component, dataformat, etc]", arity = "0..1", required = true)
+    private String dataType;
+
     @CommandLine.Option(names = {"--start-from"}, description = "Start again from the given index",
             arity = "0..1", defaultValue = "0", required = true)
     private int startFrom;
@@ -30,7 +33,7 @@ public class DataCommand extends CamelCommand {
 
     @Override
     public Integer doCall() throws Exception {
-        DataServiceClient serviceClient = new DataServiceClient(url, apiKey, modelName, startFrom);
+        DataServiceClient serviceClient = new DataServiceClient(url, apiKey, modelName, dataType, startFrom);
 
         return serviceClient.run();
     }
