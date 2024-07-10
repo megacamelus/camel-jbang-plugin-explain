@@ -18,6 +18,19 @@ public class ComponentCatalogProcessor extends CatalogProcessor {
     @Override
     public void process(int startFrom) throws InterruptedException {
 
+        processForComponents(startFrom);
+
+        processForCapabilities(startFrom);
+    }
+
+    private void processForCapabilities(int startFrom) throws InterruptedException {
+        final List<String> names = catalog.findCapabilityNames();
+        final int totalComponents = names.size();
+
+        processRecords(startFrom, names, totalComponents);
+    }
+
+    private void processForComponents(int startFrom) throws InterruptedException {
         final List<String> componentNames = catalog.findComponentNames();
         final int totalComponents = componentNames.size();
 
