@@ -7,7 +7,6 @@ import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import org.apache.camel.catalog.CamelCatalog;
 import org.apache.camel.jbang.ai.types.AlpacaRecord;
 import org.apache.camel.jbang.ai.util.CatalogUtil;
-import org.apache.camel.tooling.model.DataFormatModel;
 import org.apache.camel.tooling.model.LanguageModel;
 
 public class LanguageCatalogProcessor extends CatalogProcessor {

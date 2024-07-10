@@ -21,10 +21,10 @@ import org.apache.camel.tooling.model.BaseOptionModel;
 import org.apache.camel.util.StopWatch;
 
 public abstract class CatalogProcessor {
-    protected static final PromptTemplate QUESTION_GENERATOR_PROMPT_TEMPLATE = PromptTemplate.from(
+    private static final PromptTemplate QUESTION_GENERATOR_PROMPT_TEMPLATE = PromptTemplate.from(
             "Please write a question about the Apache Camel component {{component}} option named {{optionName}} that can be answered by the following information: {{information}}");
 
-    protected static final PromptTemplate ANSWER_GENERATOR_PROMPT_TEMPLATE = PromptTemplate.from(
+    private static final PromptTemplate ANSWER_GENERATOR_PROMPT_TEMPLATE = PromptTemplate.from(
             "Please write a paragraph explaining the following information: \"{{information}}\" as if replying to the following question: {{question}}. Only generate the response and nothing else.");
 
     protected final OpenAiStreamingChatModel chatModel;
@@ -55,7 +55,7 @@ public abstract class CatalogProcessor {
             StopWatch watch = new StopWatch();
             System.out.printf("[%s] Processing %s option %d of %d: %s -> %s", CatalogUtil.currentTime(), type, componentOptionCount, componentOptionTotal,
                     componentName, optionModel.getName());
-            createRecord(chatModel, componentName, optionModel, alpacaRecords);
+            createRecord(componentName, optionModel, alpacaRecords);
             componentOptionCount++;
             final long taken = watch.taken();
             System.out.printf(" [took %d s]%n", Duration.ofMillis(taken).toSeconds());
@@ -63,13 +63,12 @@ public abstract class CatalogProcessor {
         }
     }
 
-    protected static void createRecord(
-            OpenAiStreamingChatModel chatModel, String componentName, BaseOptionModel optionModel,
+    protected void createRecord(String componentName, BaseOptionModel optionModel,
             List<AlpacaRecord> alpacaRecords) throws InterruptedException {
 
         AlpacaRecord alpacaRecord = new AlpacaRecord();
 
-        final QuestionMeta questionMeta = generateQuestion(componentName, optionModel);
+        final QuestionMeta questionMeta = generateQuestionPrompt(componentName, optionModel);
         final String questionResponse = generateQuestion(chatModel, componentName, questionMeta.userMessage, alpacaRecord);
         if (questionResponse == null) {
             return;
@@ -98,7 +97,7 @@ public abstract class CatalogProcessor {
         chatModel.generate(questionMessage, responseHandler);
 
         if (!latch.await(2, TimeUnit.MINUTES)) {
-            System.err.println("No response was generated for component " + componentName + ". Skipping");
+            System.err.println("No response was generated for " + componentName + ". Skipping");
             return null;
         }
 
@@ -126,12 +125,12 @@ public abstract class CatalogProcessor {
 
     protected record QuestionMeta(UserMessage userMessage, String information) {}
 
-    protected static QuestionMeta generateQuestion(
-            String componentName, BaseOptionModel optionModel) {
-        final String data = CatalogUtil.toEmbeddableText(componentName, optionModel);
+    protected QuestionMeta generateQuestionPrompt(
+            String name, BaseOptionModel optionModel) {
+        final String data = CatalogUtil.toEmbeddableText(name, optionModel);
 
         Map<String, Object> variables = new HashMap<>();
-        variables.put("component", componentName);
+        variables.put("component", name);
         variables.put("optionName", optionModel.getName());
         variables.put("information", data);
 
