@@ -28,7 +28,7 @@ public class BeansCatalogProcessor extends CatalogProcessor {
         final String componentName = componentNames.get(i);
 
         final List<AlpacaRecord> alpacaRecords = new ArrayList<>(1024);
-        System.out.printf("[%s] Processing languages %d of %d: %s%n", CatalogUtil.currentTime(), i, totalComponents, componentName);
+        System.out.printf("[%s] Processing beans %d of %d: %s%n", CatalogUtil.currentTime(), i, totalComponents, componentName);
 
         final PojoBeanModel componentModel = catalog.pojoBeanModel(componentName);
 
