@@ -6,6 +6,7 @@ import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.jbang.ai.data.CatalogProcessor;
 import org.apache.camel.jbang.ai.data.ComponentCatalogProcessor;
 import org.apache.camel.jbang.ai.data.DataFormatCatalogProcessor;
+import org.apache.camel.jbang.ai.data.LanguageCatalogProcessor;
 
 import static org.apache.camel.jbang.ai.util.ModelUtil.buildModel;
 
@@ -45,6 +46,7 @@ public class DataServiceClient {
 
         return switch (dataType) {
             case "dataformat" -> new DataFormatCatalogProcessor(chatModel, catalog);
+            case "language" -> new LanguageCatalogProcessor(chatModel, catalog);
             default -> new ComponentCatalogProcessor(chatModel, catalog);
         };
     }
