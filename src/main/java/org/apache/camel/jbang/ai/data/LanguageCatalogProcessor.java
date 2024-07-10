@@ -34,7 +34,7 @@ public class LanguageCatalogProcessor extends CatalogProcessor {
         final LanguageModel componentModel = catalog.languageModel(componentName);
 
         final List<LanguageModel.LanguageOptionModel> componentOptions = componentModel.getOptions();
-        processOption(alpacaRecords, componentName, componentOptions, "component");
+        processOption(alpacaRecords, componentName, componentOptions, "language");
 
         CatalogUtil.saveRecords(alpacaRecords, componentName);
     }
