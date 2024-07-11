@@ -16,8 +16,11 @@
         <langchain4j-version>0.31.0</langchain4j-version>
         <qdrant-version>1.9.1</qdrant-version>
         <grpc-protobuf-version>1.64.0</grpc-protobuf-version>
+        <javaparser-version>3.26.1</javaparser-version>
 
         <main.class>org.apache.camel.standalone.Main</main.class>
+        <velocity-version>2.3</velocity-version>
+        <commonmark-version>0.22.0</commonmark-version>
     </properties>
 
     <dependencyManagement>
@@ -54,6 +57,24 @@
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-embeddings-all-minilm-l6-v2</artifactId>
             <version>${langchain4j-version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.javaparser</groupId>
+            <artifactId>javaparser-symbol-solver-core</artifactId>
+            <version>${javaparser-version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.velocity</groupId>
+            <artifactId>velocity-engine-core</artifactId>
+            <version>${velocity-version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.commonmark</groupId>
+            <artifactId>commonmark</artifactId>
+            <version>${commonmark-version}</version>
         </dependency>
 
     </dependencies>
