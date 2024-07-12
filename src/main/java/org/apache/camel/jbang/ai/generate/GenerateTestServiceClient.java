@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -26,6 +27,7 @@ import dev.langchain4j.model.output.Response;
 import org.apache.camel.CamelException;
 import org.apache.camel.jbang.ai.util.MarkdownParser;
 import org.apache.camel.jbang.ai.util.VelocityTemplateParser;
+import org.apache.camel.jbang.ai.util.steps.Steps;
 
 import static org.apache.camel.jbang.ai.util.ModelUtil.buildConservativeModel;
 
@@ -62,6 +64,8 @@ public class GenerateTestServiceClient {
     public static final String CONTEXT_TEST_NAME = "testName";
     public static final String CONTEXT_TEST_FILE_NAME = "testFileName";
 
+    private static final List<String> AUTO_TRIGGER = List.of("timer", "quartz");
+
     private Map<String, String> context = new HashMap<>();
 
     private final String url;
@@ -71,7 +75,7 @@ public class GenerateTestServiceClient {
     private final String outputDir;
     private boolean generateClass = false;
 
-    protected record InputMeta(UserMessage userMessage, String information) {}
+    protected record InputUnit(String data, String baseClass) {}
 
     public GenerateTestServiceClient(String url, String apiKey, String modelName, String file, String outputDir) {
         this.url = url;
@@ -100,7 +104,7 @@ public class GenerateTestServiceClient {
         }
     }
 
-    public int run() throws InterruptedException {
+    public void startChat(Steps.ChatMeta chatMeta) {
         String data = loadFile(file);
         CompilationUnit compilationUnit = StaticJavaParser.parse(data);
 
@@ -116,19 +120,21 @@ public class GenerateTestServiceClient {
         String baseClass;
         try (InputStream inputStream = getClass().getResourceAsStream("CamelTestSupport.java")) {
             final byte[] bytes = inputStream.readAllBytes();
-             baseClass = new String(bytes);
+            baseClass = new String(bytes);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        context.put(CONTEXT_BASE_CLASS, baseClass);
 
-        extractEndpoint(body, baseClass);
-        generateSender();
-        generateRoute();
+        chatMeta.setContext(new InputUnit(data, baseClass));
+    }
 
-        if (generateClass) {
-            generateClass();
-        }
+    public int run() throws InterruptedException {
+        Steps.InitialStep.start()
+                .chat(this::startChat)
+                .andThen(this::extractEndpoint)
+                .andThen(this::generateSender)
+                .andThen(this::generateRoute);
+
 
         try {
             createFile();
@@ -159,71 +165,112 @@ public class GenerateTestServiceClient {
         System.out.println(message + parsedResponse);
     }
 
-    private String generate(Supplier<InputMeta> promptSupplier) throws InterruptedException {
+    private Steps.ConversationUnit generate(Supplier<UserMessage> messageSupplier) throws InterruptedException {
         OpenAiStreamingChatModel chatModel = buildConservativeModel(url, apiKey, modelName);
-        InputMeta inputMeta = promptSupplier.get();
+        UserMessage userMessage = messageSupplier.get();
 
         CountDownLatch latch = new CountDownLatch(1);
 
         AiMessageStreamingResponseHandler handler = new AiMessageStreamingResponseHandler(latch);
-        chatModel.generate(inputMeta.userMessage, handler);
+        chatModel.generate(userMessage, handler);
         latch.await(2, TimeUnit.MINUTES);
 
-        return handler.getResponse();
+        String response = handler.getResponse();
+        return new Steps.ConversationUnit(userMessage, response);
     }
 
-    private void extractEndpoint(String body, String interfaceToFollow) throws InterruptedException {
-        final String originalResponse = generate(() -> generateExtractEndpointPrompt(body, interfaceToFollow));
-        putToContext(originalResponse, CONTEXT_ENDPOINTS, "Generated endpoint response: ");
-    }
+    /**
+     * Extracts the endpoint from the code snippet
+     * @param chatMeta
+     */
+    private void extractEndpoint(Steps.ChatMeta chatMeta) {
+        final InputUnit payload = chatMeta.context(InputUnit.class);
 
-    private void generateSender() throws InterruptedException {
-        final String originalResponse = generate(this::generateSenderQuestionPrompt);
-        putToContext(originalResponse, CONTEXT_SENDER, "Generated sender response: ");
-    }
-
-    private void generateRoute() throws InterruptedException {
-        final String originalResponse = generate(this::generateRouteQuestionPrompt);
-        putToContext(originalResponse, CONTEXT_ROUTE_BUILDER, "Generated route response: ");
-    }
-
-    private void generateClass() throws InterruptedException {
-        final String response = generate(this::generateClassPrompt);
-        System.out.println("Generated class response: " + response);
+        final Steps.ConversationUnit conversationUnit;
+        try {
+            conversationUnit = generate(() -> generateExtractEndpointPrompt(payload.data(), payload.baseClass()));
+            chatMeta.setConversationUnit(conversationUnit);
+            putToContext(conversationUnit.response(), CONTEXT_ENDPOINTS, "Generated endpoint response: ");
+        } catch (InterruptedException e) {
+            chatMeta.setException(e);
+        }
     }
 
 
+    private void generateSender(Steps.ChatMeta chatMeta) {
+        final Steps.ConversationUnit previousConversation = chatMeta.conversationUnit();
+        final String response = previousConversation.response();
 
-    protected InputMeta generateExtractEndpointPrompt(String route, String interfaceToFollow) {
+        if (response != null) {
+            for (String autoTriggerComponent : AUTO_TRIGGER) {
+                if (response.contains(autoTriggerComponent)) {
+
+                    // This route starts by itself (i.e; via timer), so we don't need to generate the sender
+                    return;
+                }
+            }
+        }
+
+        try {
+            final Steps.ConversationUnit conversationUnit = generate(this::generateSenderQuestionPrompt);
+            chatMeta.setConversationUnit(conversationUnit);
+            putToContext(conversationUnit.response(), CONTEXT_SENDER, "Generated sender response: ");
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void generateRoute(Steps.ChatMeta chatMeta) {
+        try {
+            final Steps.ConversationUnit conversationUnit = generate(this::generateRouteQuestionPrompt);
+            chatMeta.setConversationUnit(conversationUnit);
+            putToContext(conversationUnit.response(), CONTEXT_ROUTE_BUILDER, "Generated route response: ");
+        } catch (InterruptedException e) {
+            chatMeta.setException(e);
+        }
+
+    }
+
+    private void generateClass(Steps.ChatMeta chatMeta) {
+        try {
+            final Steps.ConversationUnit conversationUnit = generate(this::generateClassPrompt);
+            chatMeta.setConversationUnit(conversationUnit);
+        } catch (InterruptedException e) {
+            chatMeta.setException(e);
+            return;
+        }
+//        System.out.println("Generated class response: " + response);
+    }
+
+
+
+    protected UserMessage generateExtractEndpointPrompt(String route, String interfaceToFollow) {
         Map<String, Object> variables = new HashMap<>();
         variables.put("route", route);
 
         final Prompt prompt = EXTRACT_ENDPOINT_PROMPT_TEMPLATE.apply(variables);
-
-        return new InputMeta(prompt.toUserMessage(), interfaceToFollow);
+        return prompt.toUserMessage();
     }
 
-    protected InputMeta generateSenderQuestionPrompt() {
+    protected UserMessage generateSenderQuestionPrompt() {
         Map<String, Object> variables = new HashMap<>();
         variables.put("endpoint", context.get(CONTEXT_ENDPOINTS));
 
         final Prompt prompt = GENERATE_SENDER_PROMPT_TEMPLATE.apply(variables);
-
-        return new InputMeta(prompt.toUserMessage(), null);
+        return prompt.toUserMessage();
     }
 
 
-    protected InputMeta generateRouteQuestionPrompt() {
+    protected UserMessage generateRouteQuestionPrompt() {
         Map<String, Object> variables = new HashMap<>();
         variables.put("route", context.get(CONTEXT_ENDPOINTS));
 
         final Prompt prompt = CREATE_ROUTE_PROMPT_TEMPLATE.apply(variables);
-
-        return new InputMeta(prompt.toUserMessage(), null);
+        return prompt.toUserMessage();
     }
 
 
-    protected InputMeta generateClassPrompt() {
+    protected UserMessage generateClassPrompt() {
         Map<String, Object> variables = new HashMap<>();
         variables.put("class", context.get(CONTEXT_BASE_CLASS));
         variables.put("route", context.get(CONTEXT_ROUTE_UNDER_TEST));
@@ -232,7 +279,7 @@ public class GenerateTestServiceClient {
 
         final Prompt prompt = GENERATE_CLASS_PROMPT_TEMPLATE.apply(variables);
 
-        return new InputMeta(prompt.toUserMessage(), null);
+        return prompt.toUserMessage();
     }
 
     protected static class AiMessageStreamingResponseHandler implements StreamingResponseHandler<AiMessage> {
