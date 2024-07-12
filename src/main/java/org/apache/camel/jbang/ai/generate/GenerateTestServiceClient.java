@@ -17,14 +17,12 @@ import java.util.function.Supplier;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
-import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.UserMessage;
-import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.PromptTemplate;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
-import dev.langchain4j.model.output.Response;
 import org.apache.camel.CamelException;
+import org.apache.camel.jbang.ai.util.handlers.BufferedStreamingResponseHandler;
 import org.apache.camel.jbang.ai.util.MarkdownParser;
 import org.apache.camel.jbang.ai.util.VelocityTemplateParser;
 import org.apache.camel.jbang.ai.util.steps.Steps;
@@ -171,7 +169,7 @@ public class GenerateTestServiceClient {
 
         CountDownLatch latch = new CountDownLatch(1);
 
-        AiMessageStreamingResponseHandler handler = new AiMessageStreamingResponseHandler(latch);
+        BufferedStreamingResponseHandler handler = new BufferedStreamingResponseHandler(latch);
         chatModel.generate(userMessage, handler);
         latch.await(2, TimeUnit.MINUTES);
 
@@ -282,35 +280,4 @@ public class GenerateTestServiceClient {
         return prompt.toUserMessage();
     }
 
-    protected static class AiMessageStreamingResponseHandler implements StreamingResponseHandler<AiMessage> {
-        private final CountDownLatch latch;
-        private StringBuffer responseBuffer = new StringBuffer();
-
-        public AiMessageStreamingResponseHandler(CountDownLatch latch) {
-            this.latch = latch;
-        }
-
-        @Override
-        public void onNext(String s) {
-            responseBuffer.append(s);
-        }
-
-        @Override
-        public void onError(Throwable throwable) {
-            latch.countDown();
-        }
-
-        @Override
-        public void onComplete(Response<AiMessage> response) {
-            try {
-                StreamingResponseHandler.super.onComplete(response);
-            } finally {
-                latch.countDown();
-            }
-        }
-
-        public String getResponse() {
-            return responseBuffer.toString();
-        }
-    }
 }
