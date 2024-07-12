@@ -7,16 +7,14 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.UserMessage;
-import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.PromptTemplate;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
-import dev.langchain4j.model.output.Response;
 import org.apache.camel.catalog.CamelCatalog;
 import org.apache.camel.jbang.ai.types.AlpacaRecord;
 import org.apache.camel.jbang.ai.util.CatalogUtil;
+import org.apache.camel.jbang.ai.util.handlers.BufferedStreamingResponseHandler;
 import org.apache.camel.tooling.model.BaseOptionModel;
 import org.apache.camel.util.StopWatch;
 
@@ -91,8 +89,8 @@ public abstract class CatalogProcessor {
             throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
 
-        final AiMessageStreamingResponseHandler responseHandler =
-                new AiMessageStreamingResponseHandler(latch);
+        final BufferedStreamingResponseHandler responseHandler =
+                new BufferedStreamingResponseHandler(latch);
 
         chatModel.generate(questionMessage, responseHandler);
 
@@ -110,8 +108,8 @@ public abstract class CatalogProcessor {
         CountDownLatch latch = new CountDownLatch(1);
 
         final UserMessage responseMessage = generateResponse(information, questionResponse);
-        final AiMessageStreamingResponseHandler responseHandler =
-                new AiMessageStreamingResponseHandler(latch);
+        final BufferedStreamingResponseHandler responseHandler =
+                new BufferedStreamingResponseHandler(latch);
 
         chatModel.generate(responseMessage, responseHandler);
 
@@ -148,37 +146,4 @@ public abstract class CatalogProcessor {
 
         return prompt.toUserMessage();
     }
-
-    protected static class AiMessageStreamingResponseHandler implements StreamingResponseHandler<AiMessage> {
-        private final CountDownLatch latch;
-        private StringBuffer responseBuffer = new StringBuffer();
-
-        public AiMessageStreamingResponseHandler(CountDownLatch latch) {
-            this.latch = latch;
-        }
-
-        @Override
-        public void onNext(String s) {
-            responseBuffer.append(s);
-        }
-
-        @Override
-        public void onError(Throwable throwable) {
-            latch.countDown();
-        }
-
-        @Override
-        public void onComplete(Response<AiMessage> response) {
-            try {
-                StreamingResponseHandler.super.onComplete(response);
-            } finally {
-                latch.countDown();
-            }
-        }
-
-        public String getResponse() {
-            return responseBuffer.toString();
-        }
-    }
-
 }
