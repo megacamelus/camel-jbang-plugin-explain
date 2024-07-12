@@ -4,8 +4,6 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.input.Prompt;
@@ -14,7 +12,6 @@ import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import org.apache.camel.catalog.CamelCatalog;
 import org.apache.camel.jbang.ai.types.AlpacaRecord;
 import org.apache.camel.jbang.ai.util.CatalogUtil;
-import org.apache.camel.jbang.ai.util.handlers.BufferedStreamingResponseHandler;
 import org.apache.camel.jbang.ai.util.steps.Steps;
 import org.apache.camel.tooling.model.BaseOptionModel;
 import org.apache.camel.util.StopWatch;
@@ -60,28 +57,38 @@ public abstract class CatalogProcessor {
 
     protected abstract void processRecord(List<String> componentNames, int i, int totalComponents) throws InterruptedException;
 
-    protected void processOption(List<AlpacaRecord> alpacaRecords, String componentName,
+    protected void processOption(
+            List<AlpacaRecord> alpacaRecords, String componentName,
             List<? extends BaseOptionModel> optionModels, String type) throws InterruptedException {
         int componentOptionCount = 0;
         final int componentOptionTotal = optionModels.size();
         for (BaseOptionModel optionModel : optionModels) {
             StopWatch watch = new StopWatch();
-            System.out.printf("[%s] Processing %s option %d of %d: %s -> %s", CatalogUtil.currentTime(), type, componentOptionCount, componentOptionTotal,
+
+            System.out.printf("[%s] Processing %s option %d of %d: %s -> %s", CatalogUtil.currentTime(), type,
+                    componentOptionCount, componentOptionTotal,
                     componentName, optionModel.getName());
+
             createRecord(componentName, optionModel, alpacaRecords);
+
             componentOptionCount++;
+
             final long taken = watch.taken();
             System.out.printf(" [took %d s]%n", Duration.ofMillis(taken).toSeconds());
-
         }
     }
 
+    /**
+     * This is the main workflow with the LLM API
+     * @param componentName
+     * @param optionModel
+     * @param alpacaRecords
+     */
     protected void createRecord(String componentName, BaseOptionModel optionModel, List<AlpacaRecord> alpacaRecords) {
-
-        Steps.InitialStep.start()
-                .chat(c -> startChat(c, componentName, optionModel))
-                .andThen(this::generateQuestion)
-                .andThen(c -> generateResponse(c, alpacaRecords));
+        Steps.ChatStep.using(chatModel)
+                .withContext(c -> startChat(c, componentName, optionModel))
+                .usingPrompt(this::generateQuestionPrompt).chat()
+                .usingPrompt(this::generateAnswerPrompt).chat().andThen(c -> addRecords(c, alpacaRecords));
     }
 
     public void startChat(Steps.ChatMeta chatMeta, String name, BaseOptionModel optionModel) {
@@ -90,88 +97,30 @@ public abstract class CatalogProcessor {
         chatMeta.setContext(new ChatContext(name, optionModel, new AlpacaRecord(), rawData));
     }
 
-    private void generateQuestion(Steps.ChatMeta chatMeta) {
+    private UserMessage generateQuestionPrompt(Steps.ChatMeta chatMeta) {
+        ChatContext chatContext = chatMeta.context(ChatContext.class);
+        return generateQuestionPrompt(chatContext.rawData, chatContext.name, chatContext.optionModel);
+    }
+
+    private UserMessage generateAnswerPrompt(Steps.ChatMeta chatMeta) {
         ChatContext chatContext = chatMeta.context(ChatContext.class);
 
-        final UserMessage userMessage = generateQuestionPrompt(chatContext.rawData, chatContext.name, chatContext.optionModel);
-
-
-        final String questionResponse;
-        try {
-            questionResponse = generateQuestion(chatModel, chatContext.name, userMessage, chatContext.alpacaRecord);
-            if (questionResponse == null) {
-                return;
-            }
-
-            chatMeta.setConversationUnit(new Steps.ConversationUnit(userMessage, questionResponse));
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
+        return generateAnswerPrompt(chatContext.rawData, chatMeta.conversationUnit().response());
     }
 
-    protected static String generateQuestion(
-            OpenAiStreamingChatModel chatModel, String componentName, UserMessage questionMessage, AlpacaRecord alpacaRecord)
-            throws InterruptedException {
-        CountDownLatch latch = new CountDownLatch(1);
-
-        final BufferedStreamingResponseHandler responseHandler =
-                new BufferedStreamingResponseHandler(latch);
-
-        chatModel.generate(questionMessage, responseHandler);
-
-        if (!latch.await(2, TimeUnit.MINUTES)) {
-            System.err.println("No response was generated for " + componentName + ". Skipping");
-            return null;
-        }
-
-        return responseHandler.getResponse();
-    }
-
-    private void generateResponse(Steps.ChatMeta chatMeta, List<AlpacaRecord> alpacaRecords) {
+    public void addRecords(Steps.ChatMeta chatMeta, List<AlpacaRecord> alpacaRecords) {
         ChatContext chatContext = chatMeta.context(ChatContext.class);
         Steps.ConversationUnit conversationUnit = chatMeta.conversationUnit();
 
-        final String generatedResponse;
-        try {
-            generatedResponse = generateResponse(chatModel, chatContext.name, chatContext.rawData,
-                    conversationUnit.response());
-
-            if (generatedResponse == null) {
-                return;
-            }
-
-            chatContext.alpacaRecord.setInstruction(conversationUnit.response());
-            chatContext.alpacaRecord.setInput("");
-            chatContext.alpacaRecord.setOutput(generatedResponse);
-            alpacaRecords.add(chatContext.alpacaRecord);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        chatContext.alpacaRecord.setInstruction(conversationUnit.lastConversationUnit().response());
+        chatContext.alpacaRecord.setInput("");
+        chatContext.alpacaRecord.setOutput(conversationUnit.response());
+        alpacaRecords.add(chatContext.alpacaRecord);
     }
 
-    protected static String generateResponse(
-            OpenAiStreamingChatModel chatModel, String componentName, String information, String questionResponse)
-            throws InterruptedException {
-        CountDownLatch latch = new CountDownLatch(1);
-
-        final UserMessage responseMessage = generateResponse(information, questionResponse);
-        final BufferedStreamingResponseHandler responseHandler =
-                new BufferedStreamingResponseHandler(latch);
-
-        chatModel.generate(responseMessage, responseHandler);
-
-        if (!latch.await(2, TimeUnit.MINUTES)) {
-            System.err.println("No response was generated for component " + componentName + ". Skipping");
-            return null;
-        }
-
-        return responseHandler.getResponse();
-    }
-
-    protected UserMessage generateQuestionPrompt(String rawData,
+    protected UserMessage generateQuestionPrompt(
+            String rawData,
             String name, BaseOptionModel optionModel) {
-
 
         Map<String, Object> variables = new HashMap<>();
         variables.put("component", name);
@@ -182,7 +131,7 @@ public abstract class CatalogProcessor {
         return prompt.toUserMessage();
     }
 
-    protected static UserMessage generateResponse(String information, String question) {
+    protected UserMessage generateAnswerPrompt(String information, String question) {
         Map<String, Object> variables = new HashMap<>();
         variables.put("information", information);
         variables.put("question", question);
