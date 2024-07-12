@@ -17,6 +17,7 @@
 package org.apache.camel.jbang.ai.util;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Map;
@@ -69,14 +70,28 @@ public class VelocityTemplateParser {
         }
     }
 
-    public File getOutputFile(File outputDir, String fileName) throws IOException {
+    public static File getOutputFile(File outputDir, String fileName) throws IOException {
         File outputFile = new File(outputDir, fileName);
         if (outputFile.exists()) {
             if (!outputFile.delete()) {
-                throw new IOException("Unable to delete report: " + outputFile);
+                throw new IOException("Unable to delete file: " + outputFile);
             }
         }
 
         return outputFile;
+    }
+
+    public static File toOutputFile(String outputDir, String fileName)
+            throws IOException {
+        final File outputDirFile = new File(outputDir);
+        return VelocityTemplateParser.getOutputFile(outputDirFile, fileName);
+    }
+
+    public static void createFile(File outputFile, Map<String, String> context) throws IOException, CamelException {
+        VelocityTemplateParser templateParser = new VelocityTemplateParser();
+
+        try (FileWriter fw = new FileWriter(outputFile)) {
+            templateParser.parse(fw, context);
+        }
     }
 }

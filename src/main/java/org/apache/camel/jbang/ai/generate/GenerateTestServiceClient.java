@@ -118,7 +118,8 @@ public class GenerateTestServiceClient {
                 .usingPrompt(this::routeQuestionPrompt).chat().andThen(this::saveRouteBuilderContext);
 
         try {
-            createFile();
+            final File outputFile = VelocityTemplateParser.toOutputFile(outputDir, context.get(CONTEXT_TEST_FILE_NAME));
+            VelocityTemplateParser.createFile(outputFile, context);
         } catch (Exception e) {
             System.err.println("Unable to create file: " + e.getMessage());
             return 1;
@@ -127,16 +128,6 @@ public class GenerateTestServiceClient {
         return 0;
     }
 
-    public void createFile() throws IOException, CamelException {
-        VelocityTemplateParser templateParser = new VelocityTemplateParser();
-
-        final File outputDirFile = new File(outputDir);
-        File outputFile = templateParser.getOutputFile(outputDirFile, context.get(CONTEXT_TEST_FILE_NAME));
-
-        try (FileWriter fw = new FileWriter(outputFile)) {
-            templateParser.parse(fw, context);
-        }
-    }
 
     private void putToContext(String originalResponse, String contextEndpoints, String message) {
         MarkdownParser parser = new MarkdownParser();
