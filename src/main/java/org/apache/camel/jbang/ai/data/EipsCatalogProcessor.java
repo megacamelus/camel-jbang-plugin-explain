@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.PromptTemplate;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
@@ -53,17 +54,14 @@ public class EipsCatalogProcessor extends CatalogProcessor {
 
     // We want to use a custom prompt, so we override the generator from the parent class
     @Override
-    protected QuestionMeta generateQuestionPrompt(
+    protected UserMessage generateQuestionPrompt(String rawData,
             String name, BaseOptionModel optionModel) {
-        final String data = CatalogUtil.toEmbeddableText(name, optionModel);
-
         Map<String, Object> variables = new HashMap<>();
         variables.put("pattern", name);
         variables.put("optionName", optionModel.getName());
-        variables.put("information", data);
+        variables.put("information", rawData);
 
         final Prompt prompt = QUESTION_GENERATOR_PROMPT_TEMPLATE.apply(variables);
-
-        return new QuestionMeta(prompt.toUserMessage(), data);
+        return prompt.toUserMessage();
     }
 }

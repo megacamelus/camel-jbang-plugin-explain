@@ -69,6 +69,10 @@ public class Steps {
 
             return new Steps(chatMeta);
         }
+
+        public Steps noContextChat() {
+            return new Steps(new ChatMeta());
+        }
     }
 
     public Steps(ChatMeta lastInputMeta) {
