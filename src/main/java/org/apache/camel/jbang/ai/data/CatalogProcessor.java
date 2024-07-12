@@ -15,6 +15,7 @@ import org.apache.camel.catalog.CamelCatalog;
 import org.apache.camel.jbang.ai.types.AlpacaRecord;
 import org.apache.camel.jbang.ai.util.CatalogUtil;
 import org.apache.camel.jbang.ai.util.handlers.BufferedStreamingResponseHandler;
+import org.apache.camel.jbang.ai.util.steps.Steps;
 import org.apache.camel.tooling.model.BaseOptionModel;
 import org.apache.camel.util.StopWatch;
 
@@ -27,6 +28,20 @@ public abstract class CatalogProcessor {
 
     protected final OpenAiStreamingChatModel chatModel;
     protected final CamelCatalog catalog;
+
+    protected static class ChatContext {
+        public final String name;
+        public final BaseOptionModel optionModel;
+        public final AlpacaRecord alpacaRecord;
+        public final String rawData;
+
+        public ChatContext(String name, BaseOptionModel optionModel, AlpacaRecord alpacaRecord, String rawData) {
+            this.name = name;
+            this.optionModel = optionModel;
+            this.alpacaRecord = alpacaRecord;
+            this.rawData = rawData;
+        }
+    }
 
     protected CatalogProcessor(OpenAiStreamingChatModel chatModel, CamelCatalog catalog) {
         this.chatModel = chatModel;
@@ -61,27 +76,38 @@ public abstract class CatalogProcessor {
         }
     }
 
-    protected void createRecord(String componentName, BaseOptionModel optionModel,
-            List<AlpacaRecord> alpacaRecords) throws InterruptedException {
+    protected void createRecord(String componentName, BaseOptionModel optionModel, List<AlpacaRecord> alpacaRecords) {
 
-        AlpacaRecord alpacaRecord = new AlpacaRecord();
+        Steps.InitialStep.start()
+                .chat(c -> startChat(c, componentName, optionModel))
+                .andThen(this::generateQuestion)
+                .andThen(c -> generateResponse(c, alpacaRecords));
+    }
 
-        final QuestionMeta questionMeta = generateQuestionPrompt(componentName, optionModel);
-        final String questionResponse = generateQuestion(chatModel, componentName, questionMeta.userMessage, alpacaRecord);
-        if (questionResponse == null) {
-            return;
+    public void startChat(Steps.ChatMeta chatMeta, String name, BaseOptionModel optionModel) {
+        final String rawData = CatalogUtil.toEmbeddableText(name, optionModel);
+
+        chatMeta.setContext(new ChatContext(name, optionModel, new AlpacaRecord(), rawData));
+    }
+
+    private void generateQuestion(Steps.ChatMeta chatMeta) {
+        ChatContext chatContext = chatMeta.context(ChatContext.class);
+
+        final UserMessage userMessage = generateQuestionPrompt(chatContext.rawData, chatContext.name, chatContext.optionModel);
+
+
+        final String questionResponse;
+        try {
+            questionResponse = generateQuestion(chatModel, chatContext.name, userMessage, chatContext.alpacaRecord);
+            if (questionResponse == null) {
+                return;
+            }
+
+            chatMeta.setConversationUnit(new Steps.ConversationUnit(userMessage, questionResponse));
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
 
-        final String responseResponse = generateResponse(chatModel, componentName, questionMeta.information, questionResponse);
-        if (responseResponse == null) {
-            return;
-        }
-
-        alpacaRecord.setInstruction(questionResponse);
-        alpacaRecord.setInput("");
-        alpacaRecord.setOutput(responseResponse);
-
-        alpacaRecords.add(alpacaRecord);
     }
 
     protected static String generateQuestion(
@@ -100,6 +126,28 @@ public abstract class CatalogProcessor {
         }
 
         return responseHandler.getResponse();
+    }
+
+    private void generateResponse(Steps.ChatMeta chatMeta, List<AlpacaRecord> alpacaRecords) {
+        ChatContext chatContext = chatMeta.context(ChatContext.class);
+        Steps.ConversationUnit conversationUnit = chatMeta.conversationUnit();
+
+        final String generatedResponse;
+        try {
+            generatedResponse = generateResponse(chatModel, chatContext.name, chatContext.rawData,
+                    conversationUnit.response());
+
+            if (generatedResponse == null) {
+                return;
+            }
+
+            chatContext.alpacaRecord.setInstruction(conversationUnit.response());
+            chatContext.alpacaRecord.setInput("");
+            chatContext.alpacaRecord.setOutput(generatedResponse);
+            alpacaRecords.add(chatContext.alpacaRecord);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     protected static String generateResponse(
@@ -121,20 +169,17 @@ public abstract class CatalogProcessor {
         return responseHandler.getResponse();
     }
 
-    protected record QuestionMeta(UserMessage userMessage, String information) {}
-
-    protected QuestionMeta generateQuestionPrompt(
+    protected UserMessage generateQuestionPrompt(String rawData,
             String name, BaseOptionModel optionModel) {
-        final String data = CatalogUtil.toEmbeddableText(name, optionModel);
+
 
         Map<String, Object> variables = new HashMap<>();
         variables.put("component", name);
         variables.put("optionName", optionModel.getName());
-        variables.put("information", data);
+        variables.put("information", rawData);
 
         final Prompt prompt = QUESTION_GENERATOR_PROMPT_TEMPLATE.apply(variables);
-
-        return new QuestionMeta(prompt.toUserMessage(), data);
+        return prompt.toUserMessage();
     }
 
     protected static UserMessage generateResponse(String information, String question) {
