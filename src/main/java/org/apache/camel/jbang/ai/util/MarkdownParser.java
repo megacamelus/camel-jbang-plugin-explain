@@ -7,10 +7,14 @@ import org.commonmark.renderer.text.TextContentRenderer;
 public class MarkdownParser implements ResponseParser {
     @Override
     public String parse(String response) {
+        if (!response.contains("```")) {
+            return response;
+        }
+
         Parser parser = Parser.builder().build();
+
         final Node node = parser.parse(response);
         if (node != null) {
-
             final Node firstChild = node.getFirstChild();
             if (firstChild != null) {
                 final Node firstSourceNode = firstChild.getNext();

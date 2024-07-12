@@ -25,15 +25,20 @@ import org.apache.camel.test.junit5.CamelTestSupport;
  */
 public class $testName extends CamelTestSupport {
 
+#if ($routeBuilder)
     /**
      * Creates a the Camel route to be used by the test
      */
     $routeBuilder
+#end
 
+
+#if ($senderMethod)
     /**
      * Sends messages to the endpoint under test
      */
     $senderMethod
+#end
 
     /**
      * This is where you write your test. Make sure to annotate it with @Test

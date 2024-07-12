@@ -4,7 +4,6 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -17,7 +16,6 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.PromptTemplate;
-import org.apache.camel.CamelException;
 import org.apache.camel.jbang.ai.util.MarkdownParser;
 import org.apache.camel.jbang.ai.util.VelocityTemplateParser;
 import org.apache.camel.jbang.ai.util.steps.Steps;
@@ -36,7 +34,14 @@ public class GenerateTestServiceClient {
             "Please generate only the method and nothing else. Do not provide explanations.");
 
     private static final PromptTemplate CREATE_ROUTE_PROMPT_TEMPLATE = PromptTemplate.from("Please create a method named createRouteBuilder that " +
-            "creates this camel route:" +
+            "creates this camel route:\n" +
+            "{{route}}");
+
+    private static final PromptTemplate WRAP_ROUTE_PROMPT_TEMPLATE = PromptTemplate.from("Please create a method named createRouteBuilder that " +
+            "creates the camel route in this code snippet and complies with the given interface:\n" +
+            "interface:\n" +
+            "RouteBuilder createRouteBuilder()\n\n" +
+            "snippet:\n" +
             "{{route}}");
 
     public static final String CONTEXT_ROUTE_UNDER_TEST = "routeUnderTest";
@@ -97,16 +102,7 @@ public class GenerateTestServiceClient {
         final String body = configure.getDeclarationAsString() + " " + configure.getBody().get();
         context.put(CONTEXT_ROUTE_UNDER_TEST, body);
 
-        // Get the interface to follow
-        String baseClass;
-        try (InputStream inputStream = getClass().getResourceAsStream("CamelTestSupport.java")) {
-            final byte[] bytes = inputStream.readAllBytes();
-            baseClass = new String(bytes);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        chatMeta.setContext(new InputUnit(data, baseClass));
+        chatMeta.setContext(new InputUnit(body, null));
     }
 
     public int run() throws InterruptedException {
@@ -175,11 +171,22 @@ public class GenerateTestServiceClient {
     }
 
     private UserMessage routeQuestionPrompt(Steps.ChatMeta chatMeta) {
-        return generateRouteQuestionPrompt();
+        if (chatMeta.conversationUnit().userMessage() != null) {
+            return generateRouteQuestionPrompt();
+        }
+
+        final InputUnit payload = chatMeta.context(InputUnit.class);
+        return wrapRouteQuestionPrompt(payload.data);
     }
 
     private void saveRouteBuilderContext(Steps.ChatMeta chatMeta) {
-        putToContext(chatMeta.conversationUnit().response(), CONTEXT_ROUTE_BUILDER, "Generated route response: ");
+        if (chatMeta.conversationUnit().response() != null) {
+            putToContext(chatMeta.conversationUnit().response(), CONTEXT_ROUTE_BUILDER, "Generated route response: ");
+        } else {
+            final InputUnit payload = chatMeta.context(InputUnit.class);
+
+            putToContext(payload.data(), CONTEXT_ROUTE_BUILDER, "Using the original route: ");
+        }
     }
 
     protected UserMessage generateExtractEndpointPrompt(String route) {
@@ -204,6 +211,14 @@ public class GenerateTestServiceClient {
         variables.put("route", context.get(CONTEXT_ENDPOINTS));
 
         final Prompt prompt = CREATE_ROUTE_PROMPT_TEMPLATE.apply(variables);
+        return prompt.toUserMessage();
+    }
+
+    protected UserMessage wrapRouteQuestionPrompt(String route) {
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("route", route);
+
+        final Prompt prompt = WRAP_ROUTE_PROMPT_TEMPLATE.apply(variables);
         return prompt.toUserMessage();
     }
 }
