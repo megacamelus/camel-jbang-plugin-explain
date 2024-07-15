@@ -23,22 +23,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Camel project
-        uses: actions/checkout@v4
-        with:
-          repository: apache/camel
-          persist-credentials: false
-          ref: main
-          path: camel
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: 17
           cache: 'maven'
-      - name: Build Camel Project
-        run: ./mvnw -V --no-transfer-progress -Dquickly clean install
-        working-directory: ${{ github.workspace }}/camel
       - uses: actions/checkout@v4
         with:
           ref: main
