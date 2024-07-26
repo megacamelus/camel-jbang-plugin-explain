@@ -7,6 +7,7 @@ import org.apache.camel.jbang.ai.data.CatalogProcessor;
 import org.apache.camel.jbang.ai.data.ComponentCatalogProcessor;
 import org.apache.camel.jbang.ai.data.DataFormatCatalogProcessor;
 import org.apache.camel.jbang.ai.data.EipsCatalogProcessor;
+import org.apache.camel.jbang.ai.data.DocumentationProcessor;
 import org.apache.camel.jbang.ai.data.LanguageCatalogProcessor;
 import org.apache.camel.jbang.ai.data.BeansCatalogProcessor;
 
@@ -19,13 +20,15 @@ public class DataServiceClient {
     private final String modelName;
     private final String dataType;
     private final int startFrom;
+    private final String sourcePath;
 
-    public DataServiceClient(String url, String apiKey, String modelName, String dataType, int startFrom) {
+    public DataServiceClient(String url, String apiKey, String modelName, String dataType, int startFrom, String sourcePath) {
         this.url = url;
         this.apiKey = apiKey;
         this.modelName = modelName;
         this.dataType = dataType;
         this.startFrom = startFrom;
+        this.sourcePath = sourcePath;
     }
 
     public int run() throws InterruptedException {
@@ -52,6 +55,7 @@ public class DataServiceClient {
             case "beans" -> new BeansCatalogProcessor(chatModel, catalog);
             case "component" -> new ComponentCatalogProcessor(chatModel, catalog);
             case "eip" -> new EipsCatalogProcessor(chatModel, catalog);
+
             default -> throw new RuntimeException("Invalid data type: " + dataType);
         };
     }
