@@ -3,6 +3,7 @@ package org.apache.camel.jbang.ai.util;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -13,6 +14,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import org.apache.camel.jbang.ai.SimpleRequestBuilder;
 import org.apache.camel.jbang.ai.types.AlpacaRecord;
 import org.apache.camel.tooling.model.BaseOptionModel;
+import org.apache.commons.io.FileUtils;
 
 public final class CatalogUtil {
     private static final String DATASET_DIR = "dataset";
@@ -35,9 +37,19 @@ public final class CatalogUtil {
             } catch (IOException e) {
                 throw new RuntimeException("Failed to write json file", e);
             }
-            
+
             Path parquetOutput = Path.of(DATASET_DIR, String.format("camel-%s.parquet", componentName));
             ParquetUtil.saveParquet(alpacaRecords, parquetOutput);
+        }
+    }
+
+    public static void saveDocumentation(String data, String componentName) {
+        final File file = new File("dataset", String.format("camel-%s.md", componentName));
+
+        try {
+            FileUtils.write(file, data, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 

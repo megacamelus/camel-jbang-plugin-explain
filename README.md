@@ -115,17 +115,17 @@ java -jar target/camel-jbang-plugin-explain-4.7.0-jar-with-dependencies.jar --he
 First, make sure you have loaded data into the DB. You need to do this anytime you recreate the Vector DB
 
 ```shell
-java -jar target/camel-jbang-plugin-explain-4.7.0-SNAPSHOT-jar-with-dependencies.jar load
+java -jar target/camel-jbang-plugin-explain-4.7.0-jar-with-dependencies.jar load
 ```
 
 Then, ask questions
 
 ```shell
-java -jar target/camel-jbang-plugin-explain-4.7.0-SNAPSHOT-jar-with-dependencies.jar whatis --model-name=granite-code:8b --system-prompt="You are a coding assistant specialized in Apache Camel" "How can I enable manual commits for the Kafka component?"
+java -jar target/camel-jbang-plugin-explain-4.7.0-jar-with-dependencies.jar whatis --model-name=granite-code:8b --system-prompt="You are a coding assistant specialized in Apache Camel" "How can I enable manual commits for the Kafka component?"
 
-java -jar target/camel-jbang-plugin-explain-4.7.0-SNAPSHOT-jar-with-dependencies.jar whatis --model-name=granite-code-jbang:8b --system-prompt="You are a coding assistant specialized in Apache Camel" "Is load balance enabled by default in the MongoDB component?"
+java -jar target/camel-jbang-plugin-explain-4.7.0-jar-with-dependencies.jar whatis --model-name=granite-code-jbang:8b --system-prompt="You are a coding assistant specialized in Apache Camel" "Is load balance enabled by default in the MongoDB component?"
 
-java -jar target/camel-jbang-plugin-explain-4.7.0-SNAPSHOT-jar-with-dependencies.jar whatis --model-name=granite-code:8b --system-prompt="You are a coding assistant specialized in Apache Camel" "Is the client ID required for JMS 2.0 for the JMS component?"
+java -jar target/camel-jbang-plugin-explain-4.7.0-jar-with-dependencies.jar whatis --model-name=granite-code:8b --system-prompt="You are a coding assistant specialized in Apache Camel" "Is the client ID required for JMS 2.0 for the JMS component?"
 ```
 
 ## Generate a training dataset
@@ -136,12 +136,12 @@ JSON and Parquet files are generated in the `dataset` directory.
 
 Generate training data using the component information:
 ```shell
-java -jar target/camel-jbang-plugin-explain-4.7.0-SNAPSHOT-jar-with-dependencies.jar data --model-name --data-type components mistral:latest
+java -jar target/camel-jbang-plugin-explain-4.7.0-jar-with-dependencies.jar data generate --model-name --data-type components mistral:latest
 ```
 
 Generate training data using the dataformat information:
 ```shell
-java -jar target/camel-jbang-plugin-explain-4.7.0-SNAPSHOT-jar-with-dependencies.jar data --model-name --data-type dataformat mistral:latest
+java -jar target/camel-jbang-plugin-explain-4.7.0-jar-with-dependencies.jar data generate --model-name --data-type dataformat mistral:latest
 ```
 
 *NOTE*: A GPU is needed for this, otherwise it takes a very long time to generate the dataset (several days instead of about a day)
@@ -156,4 +156,31 @@ To upload the data formats dataset:
 
 ```shell
 huggingface-cli upload --repo-type dataset my-org/camel-dataformats .
+```
+
+## Generate the documentation dump for training dataset
+
+Before you prepare your dataset, you need to install 2 tools: asciidoc and pandoc. It also assumes you have the Camel source 
+code on your system.
+
+.Linux installation
+```shell
+sudo dnf install -y asciidoc pandoc
+```
+
+.macOS installation
+```shell
+brew install asciidoc pandoc
+```
+
+Then, convert the documentation from Camel: 
+
+```shell
+scripts/prepare-docs-for-dataset.sh /path/to/your/camel/code/base
+```
+
+Dump the data:
+
+```shell
+java -jar target/camel-jbang-plugin-explain-4.7.0-jar-with-dependencies.jar data dump --data-type component-documentation --source-path
 ```
