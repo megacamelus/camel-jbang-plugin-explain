@@ -60,7 +60,7 @@ public abstract class CatalogProcessor {
     protected void processOption(
             List<AlpacaRecord> alpacaRecords, String componentName,
             List<? extends BaseOptionModel> optionModels, String type) {
-        int componentOptionCount = 0;
+        int componentOptionCount = 1;
         final int componentOptionTotal = optionModels.size();
         for (BaseOptionModel optionModel : optionModels) {
             StopWatch watch = new StopWatch();

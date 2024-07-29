@@ -1,0 +1,10 @@
+{
+    "namespace": "org.apache.camel",
+    "type": "record",
+    "name": "AlpacaRecord",
+    "fields": [
+        {"name": "instruction", "type": "string"},
+        {"name": "input", "type": "string"},
+        {"name": "output", "type": "string"}
+    ]
+}

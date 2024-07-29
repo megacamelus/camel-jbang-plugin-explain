@@ -132,6 +132,8 @@ java -jar target/camel-jbang-plugin-explain-4.7.0-SNAPSHOT-jar-with-dependencies
 
 You can generate LLM training datasets from the catalog information.
 
+JSON and Parquet files are generated in the `dataset` directory.
+
 Generate training data using the component information:
 ```shell
 java -jar target/camel-jbang-plugin-explain-4.7.0-SNAPSHOT-jar-with-dependencies.jar data --model-name --data-type components mistral:latest

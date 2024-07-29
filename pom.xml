@@ -21,6 +21,10 @@
         <main.class>org.apache.camel.standalone.Main</main.class>
         <velocity-version>2.3</velocity-version>
         <commonmark-version>0.22.0</commonmark-version>
+
+        <avro-version>1.11.3</avro-version>
+        <parquet-avro-version>1.14.1</parquet-avro-version>
+        <hadoop-version>3.4.0</hadoop-version>
     </properties>
 
     <dependencyManagement>
@@ -76,6 +80,28 @@
             <artifactId>commonmark</artifactId>
             <version>${commonmark-version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.parquet</groupId>
+            <artifactId>parquet-avro</artifactId>
+            <version>${parquet-avro-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+            <version>${avro-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <version>${hadoop-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-mapreduce-client-core</artifactId>
+            <version>${hadoop-version}</version>  
+        </dependency>
+        
 
     </dependencies>
 
