@@ -4,7 +4,8 @@ import java.util.concurrent.Callable;
 
 import picocli.CommandLine;
 
-@CommandLine.Command(name = "whatis",
+@CommandLine.Command(name = "whatis", 
+        mixinStandardHelpOptions = true,
         description = "Explain things using AI")
 public class Main implements Callable<Integer> {
     @Override

@@ -9,9 +9,6 @@ import picocli.CommandLine;
 @CommandLine.Command(name = "data",
         description = "Generate training data data for Apache Camel")
 public class DataStandalone implements Callable<Integer> {
-    @CommandLine.Option(names = {
-            "--collection-name" }, description = "The Qdrant collection name", defaultValue = "camel-jbang", arity = "1..1", required = true)
-    private String collectionName;
 
     @CommandLine.Option(names = {"--url"}, description = "The API URL", defaultValue = "http://localhost:8000/v1/", arity = "0..1", required = true)
     private String url;

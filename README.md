@@ -4,59 +4,59 @@
 
 In order to use this tool you need two things: an API endpoint and a Qdrant vector DB instance. 
 
-## API Endpoint 
+## LLM API Endpoint 
 
-You can experiment with this tool in the open-source way using [Ollama](https://ollama.com/). It works 
-on all major operating systems. 
+In order to use this tool you need a LLM being served in a HTTP endpoint.
 
-Once Ollama is installed following the instructions on the website, follow these steps: 
+You can experiment with this tool in the open-source way using [Ollama](https://ollama.com/). It makes it easy to serve a model locally and works on all major operating systems. It also automatically tries to use your GPU for faster performance.
+
+Once Ollama is installed following the instructions on their website, follow these steps: 
 
 1. Start Ollama
 
-For instance, using a command like this:
+    ```shell
+    OLLAMA_FLASH_ATTENTION=1 OLLAMA_HOST=localhost:8000 ollama serve
+    ```
 
-```shell
-OLLAMA_FLASH_ATTENTION=1 OLLAMA_HOST=localhost:8000 ollama serve
-```
+    *NOTE*: If you use a different host make sure to pass it as an argument when using this tool (i.e., `--host=localhost` and `--port=11434`).
 
-2. Pull the models: 
+1. Pull the models: 
 
-First, pull the Granite Code Model
+    First, pull the Granite Code Model. The [Granite 8b base](https://huggingface.co/ibm-granite/granite-8b-code-base) serves as the base model for this project.
 
-The [Granite 8b base](https://huggingface.co/ibm-granite/granite-8b-code-base) serves as the base model for this project.
+    ```shell
+    OLLAMA_HOST=localhost:8000 ollama pull granite-code:8b
+    ```
 
-```shell
-ollama pull granite-code:8b
-```
+    Then pull the Mistral model:
+    ```shell
+    OLLAMA_HOST=localhost:8000 ollama pull mistral:latest
+    ```
 
-Then, pull the Mistral model:
+1. Import the customized settings for the Granite model
 
-```shell
-ollama pull mistral:latest
-```
+    These settings make the Granite model more conservative. 
 
-3. Import the customized settings for the Granite model
+    ```shell
+    cd modelfiles/granite-code-jbang-8b
+    OLLAMA_HOST=localhost:8000 ollama create granite-code-jbang:8b -f ./Modelfile
+    ```
 
-These settings make the Granite model more conservative. 
+    Alternatively, if you have enough memory (32Gb or more) you can try the 20b one:
 
-```shell
-cd modefiles/granite-code-jbang-8b
-ollama create granite-code-jbang:8b -f ./Modelfile
-```
+    ```shell
+    ollama pull granite-code:20b
+    cd modelfiles/granite-code-jbang-20b
+    OLLAMA_HOST=localhost:8000 ollama create granite-code-jbang:20b -f ./Modelfile
+    ```
 
-If you have enough memory (32Gb or more) you can try the 20b one:
-
-```shell
-ollama pull granite-code:20b
-cd modefiles/granite-code-jbang-20b
-ollama create granite-code-jbang:20b -f ./Modelfile
-```
-
-Then, when using the application, pass the appropriate model name (i.e.; `--model-name=granite-code-jbang:20b`).
+    Then, when using the application, pass the appropriate model name (i.e., `--model-name=granite-code-jbang:20b`).
 
 ## Vector DB: Qdrant
 
-Launch the Qdrant container
+The Qdrant database is needed to load and persist embeddings. 
+
+*NOTE*: If you are only using the `data` command then it is not needed.
 
 ```shell
 podman run -d --rm --name qdrant -p 6334:6334 -p 6333:6333 qdrant/qdrant:v1.7.4-unprivileged
@@ -66,10 +66,9 @@ podman run -d --rm --name qdrant -p 6334:6334 -p 6333:6333 qdrant/qdrant:v1.7.4-
 
 This tool works as a standalone application or as a JBang plugin.
 
-*NOTE*: not working due to https://issues.apache.org/jira/browse/CAMEL-20923. Use standalone mode for now.
-
 ## Running as Camel JBang Plugin
 
+*NOTE*: **plugin mode is not working** due to https://issues.apache.org/jira/browse/CAMEL-20923. Use standalone mode for now.
 
 ### Install the plugin
 
@@ -79,19 +78,25 @@ NOTE: this requires Camel 4.7.0-SNAPSHOT or greater locally.
 
 1. Build
 
-```shell
-mvn install
-```
+    ```shell
+    mvn install
+    ```
 
-2. Add to Camel JBang Plugins
+1. Add to Camel JBang Plugins
 
-```shell
-jbang -Dcamel.jbang.version=4.7.0-SNAPSHOT camel@apache/camel plugin add -g org.apache.camel.jbang.ai -a camel-jbang-plugin-explain -v 1.0.0-SNAPSHOT -d "Explain things using AI"  explain`
-```
+    ```shell
+    jbang -Dcamel.jbang.version=4.7.0-SNAPSHOT camel@apache/camel plugin add -g org.apache.camel.jbang.ai -a camel-jbang-plugin-explain -v 1.0.0-SNAPSHOT -d "Explain things using AI"  explain`
+    ```
+
+1. Choose a command to run, such as:
+
+    ```shell
+    jbang -Dcamel.jbang.version=4.7.0-SNAPSHOT camel@apache/camel explain --model-name=granite-code:8b --system-prompt="You are a coding assistant specialized in Apache Camel"  "How can I create a Camel route?"
+    ```
 
 ## Running as Standalone Application 
 
-1. Build the package as standalone
+Build the package as standalone
 
 ```shell
 mvn -Pstandalone package
@@ -99,8 +104,10 @@ mvn -Pstandalone package
 
 # Usage Examples
 
-```shell
-jbang -Dcamel.jbang.version=4.7.0-SNAPSHOT camel@apache/camel explain --model-name=granite-code:8b --system-prompt="You are a coding assistant specialized in Apache Camel"  "How can I create a Camel route?"
+Show all available commands:
+
+```
+java -jar target/camel-jbang-plugin-explain-4.7.0-jar-with-dependencies.jar --help
 ```
 
 ## Asking questions
@@ -123,7 +130,7 @@ java -jar target/camel-jbang-plugin-explain-4.7.0-SNAPSHOT-jar-with-dependencies
 
 ## Generate a training dataset
 
-You can generate LLM training datasets from the catalog information
+You can generate LLM training datasets from the catalog information.
 
 Generate training data using the component information:
 ```shell
@@ -132,18 +139,18 @@ java -jar target/camel-jbang-plugin-explain-4.7.0-SNAPSHOT-jar-with-dependencies
 
 Generate training data using the dataformat information:
 ```shell
-java -jar target/camel-jbang-plugin-explain-4.7.0-SNAPSHOT-jar-with-dependencies.jar data --model-name --data-type dataformats mistral:latest
+java -jar target/camel-jbang-plugin-explain-4.7.0-SNAPSHOT-jar-with-dependencies.jar data --model-name --data-type dataformat mistral:latest
 ```
 
-NOTE: A GPU is needed for this, otherwise it takes a very long time to generate the dataset (several days instead of about a day)
+*NOTE*: A GPU is needed for this, otherwise it takes a very long time to generate the dataset (several days instead of about a day)
 
-To upload the upload components dataset:
+To upload the components dataset:
 
 ```shell
 huggingface-cli upload --repo-type dataset my-org/camel-components .
 ```
 
-To upload the upload data formats dataset:
+To upload the data formats dataset:
 
 ```shell
 huggingface-cli upload --repo-type dataset my-org/camel-dataformats .

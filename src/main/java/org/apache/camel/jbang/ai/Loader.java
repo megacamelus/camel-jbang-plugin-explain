@@ -43,16 +43,15 @@ public final class Loader {
                         .build();
 
         if (!skipCreateCollection) {
-            QdrantClient client =
-                    new QdrantClient(
-                            QdrantGrpcClient.newBuilder(host, port, false)
-                                    .build());
-
-            client
-                    .createCollectionAsync(
-                            collectionName,
-                            Collections.VectorParams.newBuilder().setDistance(distance).setSize(dimension).build())
-                    .get();
+            try (QdrantClient client = new QdrantClient(
+                    QdrantGrpcClient.newBuilder(host, port, false)
+                            .build())) {
+                client
+                        .createCollectionAsync(
+                                collectionName,
+                                Collections.VectorParams.newBuilder().setDistance(distance).setSize(dimension).build())
+                        .get();
+            }
         }
 
         EmbeddingModel embeddingModel = new AllMiniLmL6V2EmbeddingModel();
