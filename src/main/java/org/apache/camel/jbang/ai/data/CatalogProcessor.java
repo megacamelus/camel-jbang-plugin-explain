@@ -59,7 +59,7 @@ public abstract class CatalogProcessor {
 
     protected void processOption(
             List<AlpacaRecord> alpacaRecords, String componentName,
-            List<? extends BaseOptionModel> optionModels, String type) throws InterruptedException {
+            List<? extends BaseOptionModel> optionModels, String type) {
         int componentOptionCount = 0;
         final int componentOptionTotal = optionModels.size();
         for (BaseOptionModel optionModel : optionModels) {

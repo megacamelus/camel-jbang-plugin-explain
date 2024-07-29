@@ -176,7 +176,9 @@ public class Steps {
         BufferedStreamingResponseHandler handler = new BufferedStreamingResponseHandler(latch);
         chatModel.generate(userMessage, handler);
         try {
-            latch.await(2, TimeUnit.MINUTES);
+            if (!latch.await(2, TimeUnit.MINUTES)) {
+                System.out.println("Calling the LLM took too long, response might be incomplete.");
+            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
 

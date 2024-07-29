@@ -96,8 +96,9 @@ public class GenerateTestServiceClient {
 
         // Get the configure method body
         final MethodDeclaration configure =
-                compilationUnit.findAll(MethodDeclaration.class, n -> "configure".equals(n.getNameAsString()))
-                        .getFirst();
+                compilationUnit
+                        .findAll(MethodDeclaration.class, n -> "configure".equals(n.getNameAsString()))
+                        .get(0);
 
         final String body = configure.getDeclarationAsString() + " " + configure.getBody().get();
         context.put(CONTEXT_ROUTE_UNDER_TEST, body);
