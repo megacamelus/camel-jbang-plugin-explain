@@ -10,10 +10,12 @@ import java.util.stream.Collectors;
 import org.apache.camel.catalog.CamelCatalog;
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.jbang.ai.data.documentation.ComponentDocumentationVisitor;
+import org.apache.camel.jbang.ai.data.documentation.GenericDocumentationVisitor;
 import org.apache.camel.jbang.ai.util.CatalogUtil;
 import org.apache.camel.jbang.ai.util.parsers.DocumentationParser;
 import org.apache.camel.jbang.ai.util.parsers.MarkdownParser;
 import org.apache.commons.io.FileUtils;
+import org.commonmark.node.AbstractVisitor;
 
 public class DocumentationProcessor {
     private final String sourcePath;
@@ -27,12 +29,8 @@ public class DocumentationProcessor {
 
     // We only want the documentation from the source code (not the ones copied during build)
     public boolean isAdoc(Path p) {
-        return p.toFile().getName().endsWith(".xml.md")
-                && p.toAbsolutePath().toString().contains("src/main/docs")
-                && p.toAbsolutePath().toString().contains("components")
-                && !p.toAbsolutePath().toString().contains("tooling")
-                && !p.toAbsolutePath().toString().contains("dsl")
-                && isComponent(p);
+        return p.toFile().getName().endsWith(".md")
+                && p.toAbsolutePath().toString().contains("src/main/docs");
     }
 
     // We only want the components
@@ -40,12 +38,12 @@ public class DocumentationProcessor {
         return p.toFile().getName().contains("-component");
     }
 
-    public boolean parse(Path doc, String componentName) {
+    public boolean parse(Path doc, String componentName, AbstractVisitor visitor) {
         try {
             final String content = FileUtils.readFileToString(doc.toFile());
 
             DocumentationParser parser = new MarkdownParser();
-            final String parsed = parser.parse(content, new ComponentDocumentationVisitor(catalog, componentName));
+            final String parsed = parser.parse(content, visitor);
 
             if (parsed != null) {
 
@@ -76,12 +74,15 @@ public class DocumentationProcessor {
         int skippedCount = 0;
         for (int i = startFrom; i < documentTotal; i++) {
             Path doc = docs.get(i);
-            final String componentName = doc.getFileName().toString().replaceAll("-component.*", "");
+            final String fileName = doc.getFileName().toString();
+
+            final String componentName = fileName.replaceAll("-component.*", "");
 
             System.out.printf("[%s] Processing document %d of %d %s for %s: ", CatalogUtil.currentTime(),
                     i + 1, documentTotal, doc.getFileName(), componentName);
 
-            if (parse(doc, componentName)) {
+            AbstractVisitor visitor = getVisitorForDocumentType(fileName, componentName);
+            if (parse(doc, componentName, visitor)) {
                 generatedCount++;
                 System.out.printf("done%n");
             } else {
@@ -90,5 +91,13 @@ public class DocumentationProcessor {
             }
         }
         System.out.printf("[%s] Generated: %d. Skipped: %d%n", CatalogUtil.currentTime(), generatedCount, skippedCount);
+    }
+
+    private AbstractVisitor getVisitorForDocumentType(String fileName, String componentName) {
+        if (fileName.contains("-component")) {
+            return new ComponentDocumentationVisitor(catalog, componentName);
+        }
+
+        return new GenericDocumentationVisitor(catalog, componentName);
     }
 }

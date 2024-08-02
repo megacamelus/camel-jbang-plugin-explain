@@ -1,10 +1,14 @@
-CODE_DIR=${1:-"$HOME/code/java/camel}"}
+#!/bin/bash
 
-# Based on https://tinyapps.org/blog/201701240700_convert_asciidoc_to_markdown.html
+CODE_DIR=${1:-"$HOME/code/java/camel}"}
+install_path=$(dirname "$0")
+
+logDir=$(mktemp -d)
 
 # Step 1: convert all component documentation to a docbook file
-find $CODE_DIR -type f -iname '*-component.adoc' -ipath '*src/main/docs*' -exec asciidoc -b docbook {} \;
+find "$CODE_DIR" -type f -iname '*.adoc' -ipath '*src/main/docs*' -exec "${install_path}"/convert-file.sh {} "$logDir" \; | tee $logDir/conversion.log
 
-# Step 2: convert the docbook files to Markdown
-find $CODE_DIR -type f -iname '*-component.xml' -ipath '*src/main/docs*' -exec pandoc -f docbook -t markdown_strict {} -o {}.md  \;
-
+numDocs=$(find "$CODE_DIR" -type f -iname '*.adoc' -ipath '*src/main/docs*' | wc -l)
+numConverted=$(find "$CODE_DIR" -type f -iname '*.xml' -ipath '*src/main/docs*' | wc -l)
+printf "Conversion complete. Checking results: converted %s of %s\n" "$numConverted" "$numDocs"
+printf "Check %s for results and failures" "$logDir/conversion.log"

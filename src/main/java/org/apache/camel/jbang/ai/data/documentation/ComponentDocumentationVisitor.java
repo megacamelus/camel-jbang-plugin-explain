@@ -12,13 +12,9 @@ import org.commonmark.ext.gfm.tables.TableCell;
 import org.commonmark.ext.gfm.tables.TableHead;
 import org.commonmark.ext.gfm.tables.TableRow;
 import org.commonmark.node.AbstractVisitor;
-import org.commonmark.node.Code;
-import org.commonmark.node.CustomNode;
 import org.commonmark.node.Document;
-import org.commonmark.node.Emphasis;
 import org.commonmark.node.HardLineBreak;
 import org.commonmark.node.Heading;
-import org.commonmark.node.SoftLineBreak;
 import org.commonmark.node.Text;
 
 public class ComponentDocumentationVisitor extends AbstractVisitor {
@@ -28,26 +24,6 @@ public class ComponentDocumentationVisitor extends AbstractVisitor {
     public ComponentDocumentationVisitor(CamelCatalog catalog, String componentName) {
         this.catalog = catalog;
         this.componentName = componentName;
-    }
-
-    @Override
-    public void visit(Emphasis emphasis) {
-        super.visit(emphasis);
-    }
-
-    @Override
-    public void visit(CustomNode customNode) {
-        super.visit(customNode);
-    }
-
-    @Override
-    public void visit(Code code) {
-        super.visit(code);
-    }
-
-    @Override
-    public void visit(Text text) {
-        super.visit(text);
     }
 
     @Override
