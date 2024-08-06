@@ -184,3 +184,31 @@ Dump the data:
 ```shell
 java -jar target/camel-jbang-plugin-explain-4.7.0-jar-with-dependencies.jar data dump --data-type component-documentation --source-path
 ```
+
+## Generate the taxonomy for InstructLab 
+
+To generate the taxonomy locally, follow these steps.
+
+Download the taxonomy from https://github.com/megacamelus/taxonomy
+
+Download the documentation repo from https://github.com/megacamelus/camel-upstream-info/tree/main. Then update the data using:
+
+```shell
+make fetch-docs fetch-components
+```
+
+Then, then run the following command to regenerate the taxonomy:
+
+```shell
+java -jar target/camel-jbang-plugin-explain-4.7.0-jar-with-dependencies.jar generate taxonomy --author orpiske \
+   --document-repo https://github.com/megacamelus/camel-upstream-info \
+   --document-commit e83af34070dcb575c96329ae1d5a9620ff8b4899 \
+   --document-path $HOME/code/other/camel-assistant-taxonomy/camel-upstream-info/camel-components
+   --taxonomy-path $HOME/code/python/instruct-lab/taxonomy/knowledge/technical_manual/apache/camel/features/components
+```
+
+Note: 
+* taxonomy-path: the path to the taxonomy used to train with InstructLab
+* document-path: the path for the documents referenced in the taxonomy. InstructLab does not need those, but this application needs it to use to regenerate the QnA.
+
+After that, you can run InstructLab training steps.
