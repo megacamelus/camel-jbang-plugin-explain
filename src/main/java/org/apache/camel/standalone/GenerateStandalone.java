@@ -5,7 +5,8 @@ import java.util.concurrent.Callable;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "generate",
-        description = "Generate Camel code using AI", subcommands = { GenerateCodeCommand.class, GenerateTestCommand.class})
+        description = "Generate Camel code using AI", subcommands = { GenerateCodeCommand.class, GenerateTestCommand.class,
+        GenerateTaxonomyStandalone.class })
 public class GenerateStandalone implements Callable<Integer> {
     @Override
     public Integer call() throws Exception {
