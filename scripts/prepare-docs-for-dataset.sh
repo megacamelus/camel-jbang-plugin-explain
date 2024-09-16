@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CODE_DIR=${1:-"$HOME/code/java/camel}"}
+CODE_DIR=${1:-"$HOME/code/java/camel"}
 install_path=$(dirname "$0")
 
 logDir=$(mktemp -d)
