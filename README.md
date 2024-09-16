@@ -134,10 +134,14 @@ You can generate LLM training datasets from the catalog information.
 
 JSON and Parquet files are generated in the `dataset` directory.
 
+#### Components
+
 Generate training data using the component information:
 ```shell
 java -jar target/camel-jbang-plugin-explain-4.7.0-jar-with-dependencies.jar data generate --model-name --data-type components mistral:latest
 ```
+
+#### Data formats
 
 Generate training data using the dataformat information:
 ```shell
@@ -146,7 +150,13 @@ java -jar target/camel-jbang-plugin-explain-4.7.0-jar-with-dependencies.jar data
 
 *NOTE*: A GPU is needed for this, otherwise it takes a very long time to generate the dataset (several days instead of about a day)
 
-To upload the components dataset:
+#### Others
+
+In addition to `dataformat` and `components`, you can also generate datasets for: `language`, `beans` and `eips`.
+
+### Upload
+
+To upload the components' dataset:
 
 ```shell
 huggingface-cli upload --repo-type dataset my-org/camel-components .
