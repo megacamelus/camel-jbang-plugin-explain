@@ -13,7 +13,7 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <camel.version>4.8.0</camel.version>
-        <langchain4j-version>0.33.0</langchain4j-version>
+        <langchain4j-version>0.34.0</langchain4j-version>
         <qdrant-version>1.9.1</qdrant-version>
         <grpc-protobuf-version>1.64.0</grpc-protobuf-version>
         <javaparser-version>3.26.1</javaparser-version>
