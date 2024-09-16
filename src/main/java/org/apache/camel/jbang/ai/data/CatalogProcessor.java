@@ -112,9 +112,9 @@ public abstract class CatalogProcessor {
         ChatContext chatContext = chatMeta.context(ChatContext.class);
         Steps.ConversationUnit conversationUnit = chatMeta.conversationUnit();
 
-        chatContext.alpacaRecord.setInstruction(conversationUnit.lastConversationUnit().response());
+        chatContext.alpacaRecord.setInstruction(conversationUnit.lastConversationUnit().response().trim());
         chatContext.alpacaRecord.setInput("");
-        chatContext.alpacaRecord.setOutput(conversationUnit.response());
+        chatContext.alpacaRecord.setOutput(conversationUnit.response().trim());
         alpacaRecords.add(chatContext.alpacaRecord);
     }
 
