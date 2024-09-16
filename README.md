@@ -138,14 +138,14 @@ JSON and Parquet files are generated in the `dataset` directory.
 
 Generate training data using the component information:
 ```shell
-java -jar target/camel-jbang-plugin-explain-4.7.0-jar-with-dependencies.jar data generate --model-name --data-type components mistral:latest
+java -jar target/camel-jbang-plugin-explain-4.8.0-jar-with-dependencies.jar data generate --model-name mistral:latest --data-type components
 ```
 
 #### Data formats
 
 Generate training data using the dataformat information:
 ```shell
-java -jar target/camel-jbang-plugin-explain-4.7.0-jar-with-dependencies.jar data generate --model-name --data-type dataformat mistral:latest
+java -jar target/camel-jbang-plugin-explain-4.8.0-jar-with-dependencies.jar data generate --model-name mistral:latest --data-type dataformat
 ```
 
 *NOTE*: A GPU is needed for this, otherwise it takes a very long time to generate the dataset (several days instead of about a day)
