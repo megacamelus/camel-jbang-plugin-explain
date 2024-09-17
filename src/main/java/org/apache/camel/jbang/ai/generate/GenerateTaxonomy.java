@@ -100,7 +100,12 @@ public class GenerateTaxonomy {
         File outputDir = new File(taxonomyPath, componentName);
         outputDir.mkdirs();
 
-        File outputFile = new File(outputDir, componentName + ".yaml");
+        File oldOutputFile = new File(outputDir, componentName + ".yaml");
+        if (oldOutputFile.exists()) {
+            oldOutputFile.delete();
+        }
+
+        File outputFile = new File(outputDir, "qna.yaml");
         FileUtils.writeStringToFile(outputFile, qna, StandardCharsets.UTF_8);
     }
 
