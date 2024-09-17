@@ -44,7 +44,9 @@ public final class CatalogUtil {
     }
 
     public static void saveDocumentation(String data, String componentName) {
-        final File file = new File("dataset", String.format("camel-%s.md", componentName));
+        String fileName = componentName.endsWith(".md") ? componentName : String.format("camel-%s.md", componentName);
+
+        final File file = new File("dataset", fileName);
 
         try {
             FileUtils.write(file, data, StandardCharsets.UTF_8);
