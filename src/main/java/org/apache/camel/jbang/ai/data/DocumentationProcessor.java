@@ -46,8 +46,6 @@ public class DocumentationProcessor {
             final String parsed = parser.parse(content, visitor);
 
             if (parsed != null) {
-
-                // Extracts "kafka" from "kafka-component.adoc"
                 CatalogUtil.saveDocumentation(parsed, componentName);
                 return true;
             }
