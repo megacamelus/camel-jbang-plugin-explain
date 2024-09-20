@@ -6,6 +6,7 @@ import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.jbang.ai.data.CatalogProcessor;
 import org.apache.camel.jbang.ai.data.ComponentCatalogProcessor;
 import org.apache.camel.jbang.ai.data.DataFormatCatalogProcessor;
+import org.apache.camel.jbang.ai.data.DependenciesProcessor;
 import org.apache.camel.jbang.ai.data.EipsCatalogProcessor;
 import org.apache.camel.jbang.ai.data.LanguageCatalogProcessor;
 import org.apache.camel.jbang.ai.data.BeansCatalogProcessor;
@@ -52,6 +53,7 @@ public class DataServiceClient {
             case "beans" -> new BeansCatalogProcessor(chatModel, catalog);
             case "component" -> new ComponentCatalogProcessor(chatModel, catalog);
             case "eip" -> new EipsCatalogProcessor(chatModel, catalog);
+            case "dependencies" -> new DependenciesProcessor(catalog);
 
             default -> throw new RuntimeException("Invalid data type: " + dataType);
         };
