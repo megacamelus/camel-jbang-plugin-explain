@@ -68,11 +68,9 @@ This tool works as a standalone application or as a JBang plugin.
 
 ## Running as Camel JBang Plugin
 
-*NOTE*: **plugin mode is not working** due to https://issues.apache.org/jira/browse/CAMEL-20923. Use standalone mode for now.
-
 ### Install the plugin
 
-NOTE: this requires Camel 4.7.0-SNAPSHOT or greater locally.
+NOTE: this requires Camel 4.8.1-SNAPSHOT or greater locally.
 
 #### Build and install
 
@@ -85,14 +83,9 @@ NOTE: this requires Camel 4.7.0-SNAPSHOT or greater locally.
 1. Add to Camel JBang Plugins
 
     ```shell
-    jbang -Dcamel.jbang.version=4.7.0-SNAPSHOT camel@apache/camel plugin add -g org.apache.camel.jbang.ai -a camel-jbang-plugin-explain -v 1.0.0-SNAPSHOT -d "Explain things using AI"  explain`
+    jbang -Dcamel.jbang.version=4.8.1-SNAPSHOT camel@apache/camel plugin add --gav org.apache.camel.jbang.ai:camel-jbang-plugin-explain:1.0.0-SNAPSHOT --description "Explain things using AI"  explain
     ```
 
-1. Choose a command to run, such as:
-
-    ```shell
-    jbang -Dcamel.jbang.version=4.7.0-SNAPSHOT camel@apache/camel explain --model-name=granite-code:8b --system-prompt="You are a coding assistant specialized in Apache Camel"  "How can I create a Camel route?"
-    ```
 
 ## Running as Standalone Application 
 
@@ -103,6 +96,8 @@ mvn -Pstandalone package
 ```
 
 # Usage Examples
+
+*NOTE*: If you are using the JBang plugin, replace all in the following commands `java -jar target/camel-jbang-plugin-explain-4.7.0-jar-with-dependencies.jar`  by `jbang -Dcamel.jbang.version=4.8.1-SNAPSHOT camel@apache/camel explain`.
 
 Show all available commands:
 
